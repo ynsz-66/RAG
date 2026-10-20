@@ -7,10 +7,10 @@ from tqdm import tqdm  # type: ignore[import-untyped]
 tqdm.set_lock(threading.RLock())
 
 from src.indexing import run_indexing  # noqa: E402
-from src.var import CHUNKS_DIR, INDEX_DIR, LANG  # noqa: E402
+from src.var import CHUNKS_DIR, INDEX_DIR  # noqa: E402
 
 
-def index_directory(path: Path, lang: str = LANG) -> int:
+def index_directory(path: Path, lang: str) -> int:
     """Build the BM25 index for the directory and return the chunk count."""
     return len(run_indexing(str(path), lang))
 

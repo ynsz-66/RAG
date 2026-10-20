@@ -1,7 +1,6 @@
 import time
 from pathlib import Path
 
-from dotenv import load_dotenv
 from pydantic import ValidationError
 from textual import work
 from textual.app import App, ComposeResult
@@ -49,8 +48,6 @@ from src.var import (
     SYSTEM,
 )
 
-load_dotenv()
-
 
 class HistoryButton(Button):
     """History panel button bound to a conversation file."""
@@ -96,7 +93,10 @@ class RagApp(App[None]):
                                     id="pick-folder",
                                 )
                                 yield Select(
-                                    [(c, c) for c in sorted({"fr", "en", LANG})],
+                                    [
+                                        (c, c)
+                                        for c in sorted({"fr", "en", LANG})
+                                    ],
                                     value=LANG,
                                     allow_blank=False,
                                     id="lang",
