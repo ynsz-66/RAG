@@ -1,4 +1,4 @@
-# my-rag
+# RAG
 
 Small **100% local** RAG: **BM25** indexing + generation via **Ollama**.
 Index any folder of `.md` / `.py` / `.pdf` / `.txt` files, then ask
@@ -16,7 +16,7 @@ Requirements: Python ≥ 3.10, [`uv`](https://docs.astral.sh/uv/) and
 [Ollama](https://ollama.com).
 
 ```bash
-git clone git@github.com:ynsz-66/my-rag.git my-rag && cd my-rag
+git clone git@github.com:ynsz-66/RAG.git rag && cd rag
 make install        # uv sync
 ```
 
