@@ -73,6 +73,12 @@ cp .env.example .env
 |----------------|--------------------------|-----------------------------------------------------|
 | `OLLAMA_HOST`  | `http://localhost:11434` | Ollama server URL                                   |
 | `OLLAMA_MODEL` | `qwen3:8b`               | Any model installed locally                         |
+| `BM25_STEMMER_LANG` | `french`            | Stemmer language: the majority language of your corpus |
+
+BM25 applies **one** stemmer to the whole corpus, so set `BM25_STEMMER_LANG` to the language most of
+your documents are written in: if 90% of the corpus is French, use `french`; if it is mostly English,
+use `english`. Any [Snowball](https://snowballstem.org/) language works (`german`, `spanish`, …).
+Re-run the indexing after changing it.
 
 ### 4. Run
 

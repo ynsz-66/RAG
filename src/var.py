@@ -1,5 +1,6 @@
 import os
 from bm25s.stopwords import STOPWORDS_EN, STOPWORDS_FRENCH  # type: ignore
+import Stemmer  # type: ignore
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,6 +25,8 @@ TITLE_SYSTEM = (
     "Reply with the title only, without quotes or final punctuation."
 )
 STOPWORDS_EN_FR = STOPWORDS_EN + STOPWORDS_FRENCH  # bilingual corpus
+# one stemmer for the whole corpus: pick its majority language
+STEMMER = Stemmer.Stemmer(os.environ.get("BM25_STEMMER_LANG", "french"))
 RAW_DIR = os.environ.get("RAW_DIR", "data/raw/")
 INDEX_DIR = os.environ.get("BM25_INDEX_DIR", "data/processed/bm25_index/")
 CHUNKS_DIR = os.environ.get("CHUNKS_DIR", "data/processed/chunks/")
