@@ -73,15 +73,16 @@ cp .env.example .env
 |----------------|--------------------------|-----------------------------------------------------|
 | `OLLAMA_HOST`  | `http://localhost:11434` | Ollama server URL                                   |
 | `OLLAMA_MODEL` | `qwen3:8b`               | Any model installed locally                         |
-| `BM25_LANG`    | `fr`                     | Stopwords language: set `en` for an English corpus  |
 
 ### 4. Run
 
 ```bash
-make app
+uv run python -m src index [raw_path] [--max-chunk-size 2000]   # chunk + index (default: data/raw/)
+uv run python -m src retrieve "your question" [-k 10]          # print the top-k sources
+uv run python -m src answer "your question" [-k 10] [--keep 3]  # stream an answer from the top sources
 ```
 
-In the UI, select the folder to index, then ask your questions.
+Index once (and again after changing the corpus), then run `retrieve` or `answer` as many times as you want.
 
 ## 🛠️ Commands
 

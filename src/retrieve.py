@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Tuple
 
 import bm25s  # type: ignore[import-untyped]
 from src.validators import MinimalSource
-from .var import INDEX_DIR, CHUNKS_PATH
+from .var import INDEX_DIR, CHUNKS_PATH, STOPWORDS_EN_FR
 
 
 def load_index() -> Tuple[bm25s.BM25, List[Dict[str, Any]]]:
@@ -21,13 +21,12 @@ def load_index() -> Tuple[bm25s.BM25, List[Dict[str, Any]]]:
 
 def query_index(
     retriever: bm25s.BM25,
-    lang: str,
     chunks_meta: List[Dict[str, Any]],
     query: str,
     k: int = 10,
 ) -> List[MinimalSource]:
     """Return the top-``k`` sources for ``query`` from a loaded index."""
-    query_tokens = bm25s.tokenize(query, stopwords=lang, show_progress=False)
+    query_tokens = bm25s.tokenize(query, stopwords=STOPWORDS_EN_FR, show_progress=False)
     results, _ = retriever.retrieve(
         query_tokens, k=k, show_progress=False
     )
@@ -40,7 +39,7 @@ def query_index(
     ]
 
 
-def retrieve(query: str, lang: str, k: int = 10) -> List[MinimalSource]:
+def retrieve(query: str, k: int = 10) -> List[MinimalSource]:
     """Load the index from disk and return the top-``k`` sources."""
     retriever, chunks_meta = load_index()
-    return query_index(retriever, lang, chunks_meta, query, k)
+    return query_index(retriever, chunks_meta, query, k)

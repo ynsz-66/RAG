@@ -1,4 +1,5 @@
 import os
+from bm25s.stopwords import STOPWORDS_EN, STOPWORDS_FRENCH  # type: ignore
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,7 +23,7 @@ TITLE_SYSTEM = (
     "Always answer in the same language as the user's prompt. "
     "Reply with the title only, without quotes or final punctuation."
 )
-LANG = os.environ.get("BM25_LANG", "fr")
+STOPWORDS_EN_FR = STOPWORDS_EN + STOPWORDS_FRENCH  # bilingual corpus
 RAW_DIR = os.environ.get("RAW_DIR", "data/raw/")
 INDEX_DIR = os.environ.get("BM25_INDEX_DIR", "data/processed/bm25_index/")
 CHUNKS_DIR = os.environ.get("CHUNKS_DIR", "data/processed/chunks/")
