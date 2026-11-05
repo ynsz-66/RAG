@@ -1,51 +1,42 @@
-import argparse
+import fire  # type: ignore
 
 from src.indexing import run_indexing
 from src.ollama_llm import OllamaLLM
-from src.retrieve import retrieve
+from src.retrieve import retrieve as retrieve_sources
 from src.var import RAW_DIR, SYSTEM
 
 MAX_TOKENS = 1024
 
 
-def cmd_index(args: argparse.Namespace) -> None:
-    chunks = run_indexing(args.raw_path, args.max_chunk_size)
-    print(f"{len(chunks)} chunks indexed from {args.raw_path}")
+class CLI:
+    """Local BM25 RAG: index a corpus, retrieve sources, answer questions."""
 
+    def index(
+        self, raw_path: str = RAW_DIR, max_chunk_size: int = 2000
+    ) -> None:
+        """Chunk and index a corpus."""
+        chunks = run_indexing(raw_path, max_chunk_size)
+        print(f"{len(chunks)} chunks indexed from {raw_path}")
 
-def cmd_retrieve(args: argparse.Namespace) -> None:
-    for i, source in enumerate(retrieve(args.query, args.k), 1):
-        print(f"--- [{i}] {source.file_path}\n{source.content}\n")
+    def retrieve(self, query: str, k: int = 10) -> None:
+        """Print the top-k sources for a query."""
+        # fire parses args as Python literals ("42" -> int), so force str
+        for i, source in enumerate(retrieve_sources(str(query), k), 1):
+            print(f"--- [{i}] {source.file_path}\n{source.content}\n")
 
-
-def cmd_answer(args: argparse.Namespace) -> None:
-    sources = retrieve(args.query, args.k)[: args.keep]
-    context = "\n\n".join(source.content for source in sources)
-    prompt = f"Sources:\n{context}\n\nQuestion: {args.query}"
-    for delta in OllamaLLM().chat_stream(SYSTEM, prompt, MAX_TOKENS):
-        print(delta, end="", flush=True)
-    print()
+    def answer(self, query: str, k: int = 10, keep: int = 3) -> None:
+        """Stream an LLM answer from the top sources."""
+        query = str(query)
+        sources = retrieve_sources(query, k)[:keep]
+        context = "\n\n".join(source.content for source in sources)
+        prompt = f"Sources:\n{context}\n\nQuestion: {query}"
+        for delta in OllamaLLM().chat_stream(SYSTEM, prompt, MAX_TOKENS):
+            print(delta, end="", flush=True)
+        print()
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="python -m src")
-    sub = parser.add_subparsers(required=True)
-
-    index = sub.add_parser("index", help="chunk and index a corpus")
-    index.add_argument("raw_path", nargs="?", default=RAW_DIR)
-    index.add_argument("--max-chunk-size", type=int, default=2000)
-    index.set_defaults(func=cmd_index)
-
-    for name, func in (("retrieve", cmd_retrieve), ("answer", cmd_answer)):
-        p = sub.add_parser(name, help=f"{name} for a query")
-        p.add_argument("query")
-        p.add_argument("-k", type=int, default=10)
-        if name == "answer":
-            p.add_argument("--keep", type=int, default=3)
-        p.set_defaults(func=func)
-
-    args = parser.parse_args()
-    args.func(args)
+    fire.Fire(CLI)
 
 
 if __name__ == "__main__":

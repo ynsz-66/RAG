@@ -11,6 +11,7 @@ dependencies = [
   "textual",
   "tqdm",
   "pystemmer>=3.1.0",
+  "fire>=0.7.1",
 ]
 
 [dependency-groups]
