@@ -4,6 +4,7 @@ import httpx
 import time
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
+from tqdm import tqdm  # type: ignore
 
 from src.chunking import create_chunk
 from src.validators import Chunk
@@ -36,7 +37,7 @@ def run_indexing(
 
     print(f"Embedding {len(chunks)} chunks with {EMBED_MODEL}...")
     vectors: List[List[float]] = []
-    for i in range(0, len(chunks), BATCH_SIZE):
+    for i in tqdm(range(0, len(chunks), BATCH_SIZE), unit="batch"):
         batch = chunks[i:i + BATCH_SIZE]
         vectors.extend(embed([c.content for c in batch]))
 
@@ -51,12 +52,14 @@ def run_indexing(
             size=len(vectors[0]), distance=Distance.COSINE
         ),
     )
-    client.upsert(
+    # batched upload: one big request would exceed Qdrant's 32 MB limit
+    client.upload_points(
         QDRANT_COLLECTION,
         points=[
             PointStruct(id=i, vector=v, payload=c.model_dump())
             for i, (c, v) in enumerate(zip(chunks, vectors))
         ],
+        batch_size=256,
     )
     print(f"time = {time.time() - start_time:.2f} seconds")
     return chunks
