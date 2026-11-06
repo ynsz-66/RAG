@@ -174,10 +174,12 @@ pyrightconfig.json
 .hf_cache/
 
 .build/
-.history/
 data/
 
 # qdrant
 qdrant_storage/
 
 CLAUDE*
+
+# ollama serve logs
+.ollama.log
