@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Tuple
 
 import bm25s  # type: ignore[import-untyped]
 from src.validators import MinimalSource
-from .var import INDEX_DIR, CHUNKS_PATH, STEMMER, STOPWORDS_EN_FR
+from src.var import INDEX_DIR, CHUNKS_PATH, STEMMER, STOPWORDS_EN_FR
 
 
 def load_index() -> Tuple[bm25s.BM25, List[Dict[str, Any]]]:

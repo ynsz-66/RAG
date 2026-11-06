@@ -1,33 +1,40 @@
 import fire  # type: ignore
 
-from src.indexing import run_indexing
 from src.ollama_llm import OllamaLLM
-from src.retrieve import retrieve as retrieve_sources
+from src.retrievers import get_indexer, get_retriever
 from src.var import RAW_DIR, SYSTEM
 
 MAX_TOKENS = 1024
 
 
 class CLI:
-    """Local BM25 RAG: index a corpus, retrieve sources, answer questions."""
+    """Local RAG: index a corpus, retrieve sources, answer questions.
+
+    --method: bm25 (default) | embedding | hybrid
+    """
 
     def index(
-        self, raw_path: str = RAW_DIR, max_chunk_size: int = 2000
+        self,
+        raw_path: str = RAW_DIR,
+        max_chunk_size: int = 2000,
+        method: str = "bm25",
     ) -> None:
         """Chunk and index a corpus."""
-        chunks = run_indexing(raw_path, max_chunk_size)
+        chunks = get_indexer(method)(raw_path, max_chunk_size)
         print(f"{len(chunks)} chunks indexed from {raw_path}")
 
-    def retrieve(self, query: str, k: int = 10) -> None:
+    def retrieve(self, query: str, k: int = 10, method: str = "bm25") -> None:
         """Print the top-k sources for a query."""
         # fire parses args as Python literals ("42" -> int), so force str
-        for i, source in enumerate(retrieve_sources(str(query), k), 1):
+        for i, source in enumerate(get_retriever(method)(str(query), k), 1):
             print(f"--- [{i}] {source.file_path}\n{source.content}\n")
 
-    def answer(self, query: str, k: int = 10, keep: int = 3) -> None:
+    def answer(
+        self, query: str, k: int = 10, keep: int = 3, method: str = "bm25"
+    ) -> None:
         """Stream an LLM answer from the top sources."""
         query = str(query)
-        sources = retrieve_sources(query, k)[:keep]
+        sources = get_retriever(method)(query, k)[:keep]
         context = "\n\n".join(source.content for source in sources)
         prompt = f"Sources:\n{context}\n\nQuestion: {query}"
         print("answering...")

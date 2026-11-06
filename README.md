@@ -88,6 +88,8 @@ uv run python -m src retrieve "your question" [-k 10]          # print the top-k
 uv run python -m src answer "your question" [-k 10] [--keep 3]  # stream an answer from the top sources
 ```
 
+All three commands take `--method bm25|embedding|hybrid` (default `bm25`; `embedding` and `hybrid` are not implemented yet).
+
 Index once (and again after changing the corpus), then run `retrieve` or `answer` as many times as you want.
 
 ## 🛠️ Commands

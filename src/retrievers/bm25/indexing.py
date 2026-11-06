@@ -8,7 +8,9 @@ import bm25s.utils.corpus as saving_progress_bar  # type: ignore
 from src.chunking import create_chunk
 from src.validators import Chunk
 
-from .var import CHUNKS_DIR, CHUNKS_PATH, INDEX_DIR, STEMMER, STOPWORDS_EN_FR
+from src.var import (
+    CHUNKS_DIR, CHUNKS_PATH, INDEX_DIR, STEMMER, STOPWORDS_EN_FR
+)
 
 saving_progress_bar.find_newline_positions = partial(
     saving_progress_bar.find_newline_positions, show_progress=False
