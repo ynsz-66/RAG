@@ -26,9 +26,11 @@ def query_index(
     k: int = 10,
 ) -> List[MinimalSource]:
     """Return the top-``k`` sources for ``query`` from a loaded index."""
+    print("tokenize query...")
     query_tokens = bm25s.tokenize(
         query, stopwords=STOPWORDS_EN_FR, stemmer=STEMMER, show_progress=False
     )
+    print("retrieve...")
     results, _ = retriever.retrieve(
         query_tokens, k=k, show_progress=False
     )

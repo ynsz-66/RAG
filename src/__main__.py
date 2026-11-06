@@ -30,6 +30,7 @@ class CLI:
         sources = retrieve_sources(query, k)[:keep]
         context = "\n\n".join(source.content for source in sources)
         prompt = f"Sources:\n{context}\n\nQuestion: {query}"
+        print("answering...")
         for delta in OllamaLLM().chat_stream(SYSTEM, prompt, MAX_TOKENS):
             print(delta, end="", flush=True)
         print()

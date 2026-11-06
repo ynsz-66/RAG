@@ -19,17 +19,20 @@ def run_indexing(
     raw_path: str,
     max_chunk_size: int = 2000,
 ) -> List[Chunk]:
+    print("Create chunks...")
     chunks = create_chunk(raw_path, max_chunk_size=max_chunk_size)
     if not chunks:
         return []
 
     texts = [c.content for c in chunks]
 
+    print("Tokenizing chunks...")
     texts_tokens = bm25s.tokenize(
         texts, stopwords=STOPWORDS_EN_FR, stemmer=STEMMER, show_progress=False
     )
 
     retriever = bm25s.BM25()
+    print("Indexing chunks...")
     retriever.index(texts_tokens, show_progress=False)
 
     os.makedirs(CHUNKS_DIR, exist_ok=True)
@@ -42,6 +45,7 @@ def run_indexing(
                 "type": c.type,
             }) + "\n")
 
+    print("Saving index...")
     retriever.save(INDEX_DIR)
 
     return chunks
