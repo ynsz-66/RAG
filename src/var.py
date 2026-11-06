@@ -33,3 +33,7 @@ CHUNKS_DIR = os.environ.get("CHUNKS_DIR", "data/processed/chunks/")
 CHUNKS_PATH = os.environ.get(
     "CHUNKS_PATH", os.path.join(CHUNKS_DIR, "chunks.json")
 )
+EMBED_HOST = os.environ.get("EMBED_HOST", "http://localhost:11434")
+EMBED_MODEL = os.environ.get("EMBED_MODEL", "BGE-M3")
+QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
+QDRANT_COLLECTION = os.environ.get("QDRANT_COLLECTION", "chunks")
