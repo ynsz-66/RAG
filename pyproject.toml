@@ -12,6 +12,7 @@ dependencies = [
   "tqdm",
   "pystemmer>=3.1.0",
   "fire>=0.7.1",
+  "qdrant-client>=1.20.0",
 ]
 
 [dependency-groups]
