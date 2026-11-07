@@ -99,7 +99,6 @@ Index once (and again after changing the corpus), then run `retrieve` or `answer
 | `make install`     | Install dependencies (`uv sync`)                        |
 | `make app`         | Launch the Textual interface                            |
 | `make lint`        | Run flake8 + mypy                                       |
-| `make lint-strict` | Strict lint                                             |
 | `make clean`       | Remove venv, caches and `data/processed/`               |
 
 ## 🧱 Stack

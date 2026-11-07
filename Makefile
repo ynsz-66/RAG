@@ -2,10 +2,8 @@
 
 PYTHON      = python3
 ENV         = .venv/
-RAW         = data/raw/
+RAW         = data/raw/vllm-0.10.1/docs/
 
-CHUNKS_DIR      = data/processed/chunks/
-BM25_DIR        = data/processed/bm25_index/
 MAX_CHUNK_SIZE  = 2000
 
 OLLAMA_LOG      = .ollama.log
@@ -23,7 +21,7 @@ RED     = \033[0;31m
 BOLD    = \033[1m
 RESET   = \033[0m
 
-.PHONY: all help install app lint lint-strict \
+.PHONY: all help install lint \
 	check-ollama up down clean fclean re \
 	index retrieve answer check-q
 
@@ -43,10 +41,8 @@ help:
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "index"    "Index RAW with METHOD"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "retrieve" "Top-K chunks for Q=\"...\""
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "answer"   "LLM answer for Q=\"...\" (needs make up)"
-	@printf "  $(CYAN)%-12s$(RESET) %s\n" "app"      "Launch the Textual UI (main_visu.py)"
 	@printf "\n$(BOLD)Lint$(RESET)\n"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "lint"        "flake8 + mypy (standard rules)"
-	@printf "  $(CYAN)%-12s$(RESET) %s\n" "lint-strict" "flake8 + mypy --strict"
 	@printf "\n$(BOLD)Overridable variables$(RESET)\n"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "RAW"            "$(RAW)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "METHOD"         "$(METHOD)"
@@ -58,9 +54,6 @@ help:
 
 install:
 	@uv sync
-
-app:
-	@uv run ${PYTHON} main_visu.py
 
 
 check-ollama:
@@ -100,7 +93,7 @@ clean: down
 fclean: clean
 	@rm -rf $(QDRANT_STORAGE)
 	@rm -rf ${CHUNKS_DIR}
-	@rm -rf ${BM25_DIR}
+	@rm -rf ${INDEX_DIR}
 	@printf "$(GREEN)Qdrant storage $(QDRANT_STORAGE) removed.$(RESET)\n"
 
 re: clean up
@@ -120,14 +113,8 @@ answer: check-q
 
 lint:
 	@echo "$(GREEN)Running linters...$(RESET)"
-	@uv run flake8 --exclude=$(ENV),${UV_CACHE},${RAW} .
-	@uv run mypy . --exclude '$(ENV)|${UV_CACHE}|${RAW}' \
+	@uv run flake8 --exclude=$(ENV),${UV_CACHE},${RAW},data/ .
+	@uv run mypy . --exclude '$(ENV)|${UV_CACHE}|${RAW},data/' \
 		--warn-return-any --ignore-missing-imports \
 		--disallow-untyped-defs --check-untyped-defs
 	@echo "$(GREEN)Lint complete!$(RESET)"
-
-lint-strict:
-	@echo "$(GREEN)Running linters in strict mode...$(RESET)"
-	@uv run flake8 --exclude=$(ENV),${UV_CACHE},${RAW} .
-	@uv run mypy . --exclude '$(ENV)|${UV_CACHE}|${RAW}' --strict
-	@echo "$(GREEN)Strict lint complete!$(RESET)"

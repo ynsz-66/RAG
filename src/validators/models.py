@@ -1,4 +1,3 @@
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -8,5 +7,3 @@ class MinimalSource(BaseModel):
 
     file_path: str
     content: str
-    first_character_index: Optional[int] = None
-    last_character_index: Optional[int] = None

@@ -2,7 +2,7 @@ import fire  # type: ignore
 
 from src.ollama_llm import OllamaLLM
 from src.retrievers import get_indexer, get_retriever
-from src.var import RAW_DIR, SYSTEM
+from src.var import SYSTEM
 
 MAX_TOKENS = 1024
 
@@ -15,7 +15,7 @@ class CLI:
 
     def index(
         self,
-        raw_path: str = RAW_DIR,
+        raw_path: str,
         max_chunk_size: int = 2000,
         method: str = "bm25",
     ) -> None:

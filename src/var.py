@@ -1,6 +1,6 @@
 import os
 from bm25s.stopwords import STOPWORDS_EN, STOPWORDS_FRENCH  # type: ignore
-import Stemmer  # type: ignore
+import Stemmer
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,15 +24,11 @@ TITLE_SYSTEM = (
     "Always answer in the same language as the user's prompt. "
     "Reply with the title only, without quotes or final punctuation."
 )
-STOPWORDS_EN_FR = STOPWORDS_EN + STOPWORDS_FRENCH  # bilingual corpus
-# one stemmer for the whole corpus: pick its majority language
+STOPWORDS_EN_FR = STOPWORDS_EN + STOPWORDS_FRENCH
 STEMMER = Stemmer.Stemmer(os.environ.get("BM25_STEMMER_LANG", "french"))
-RAW_DIR = os.environ.get("RAW_DIR", "data/raw/")
 INDEX_DIR = os.environ.get("BM25_INDEX_DIR", "data/processed/bm25_index/")
 CHUNKS_DIR = os.environ.get("CHUNKS_DIR", "data/processed/chunks/")
-CHUNKS_PATH = os.environ.get(
-    "CHUNKS_PATH", os.path.join(CHUNKS_DIR, "chunks.json")
-)
+CHUNKS_PATH = os.path.join(CHUNKS_DIR, "chunks.json")
 EMBED_HOST = os.environ.get("EMBED_HOST", "http://localhost:11434")
 EMBED_MODEL = os.environ.get("EMBED_MODEL", "BGE-M3")
 QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
