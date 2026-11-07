@@ -30,10 +30,9 @@ def retrieve(query: str, k: int = 10) -> List[MinimalSource]:
 
     print(f"time = {time.time() - start_time:.2f} seconds")
     return [
-        MinimalSource(
-            file_path=hit.payload["file_path"],
-            content=hit.payload["content"],
-        )
+        MinimalSource(**{
+            key: hit.payload[key] for key in MinimalSource.model_fields
+        })
         for hit in hits
         if hit.payload is not None
     ]

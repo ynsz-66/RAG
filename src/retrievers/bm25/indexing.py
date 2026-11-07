@@ -45,6 +45,8 @@ def run_indexing(
                 "file_path": c.file_path,
                 "content": c.content,
                 "type": c.type,
+                "first_character_index": c.first_character_index,
+                "last_character_index": c.last_character_index,
             }) + "\n")
 
     print("Saving index...")

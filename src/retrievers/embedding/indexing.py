@@ -42,7 +42,7 @@ def run_indexing(
         vectors.extend(embed([c.content for c in batch]))
 
     print("Saving to Qdrant...")
-    client = QdrantClient(url=QDRANT_URL)
+    client = QdrantClient(url=QDRANT_URL, timeout=60)
     # full re-index: drop stale chunks from a previous run
     if client.collection_exists(QDRANT_COLLECTION):
         client.delete_collection(QDRANT_COLLECTION)
@@ -52,7 +52,6 @@ def run_indexing(
             size=len(vectors[0]), distance=Distance.COSINE
         ),
     )
-    # batched upload: one big request would exceed Qdrant's 32 MB limit
     client.upload_points(
         QDRANT_COLLECTION,
         points=[

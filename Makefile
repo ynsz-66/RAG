@@ -2,7 +2,7 @@
 
 PYTHON      = python3
 ENV         = .venv/
-RAW         = data/raw/vllm-0.10.1/docs/
+RAW         = data/raw/vllm-0.10.1/
 
 MAX_CHUNK_SIZE  = 2000
 
@@ -73,8 +73,6 @@ down:
 	@docker compose down
 
 clean: down
-	@pkill -f "ollama serve" 2>/dev/null || true
-	@printf "$(GREEN)Services stopped.$(RESET)\n"
 	@echo "$(GREEN)Cleaning temporary files and caches...$(RESET)"
 	@rm -rf ${ENV}
 	@rm -rf .uv_cache

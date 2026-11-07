@@ -34,11 +34,11 @@ def query_index(
     results, _ = retriever.retrieve(
         query_tokens, k=k, show_progress=False
     )
+    fields = MinimalSource.model_fields
     return [
-        MinimalSource(
-            file_path=chunks_meta[int(doc_id)]["file_path"],
-            content=chunks_meta[int(doc_id)]["content"],
-        )
+        MinimalSource(**{
+            key: chunks_meta[int(doc_id)][key] for key in fields
+        })
         for doc_id in results[0]
     ]
 
