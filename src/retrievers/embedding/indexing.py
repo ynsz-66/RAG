@@ -28,6 +28,7 @@ def embed(texts: List[str]) -> List[List[float]]:
 def run_indexing(
     raw_path: str,
     max_chunk_size: int = 2000,
+    collection: str = QDRANT_COLLECTION,
 ) -> List[Chunk]:
     start_time = time.time()
     print("Create chunks...")
@@ -44,16 +45,16 @@ def run_indexing(
     print("Saving to Qdrant...")
     client = QdrantClient(url=QDRANT_URL, timeout=60)
     # full re-index: drop stale chunks from a previous run
-    if client.collection_exists(QDRANT_COLLECTION):
-        client.delete_collection(QDRANT_COLLECTION)
+    if client.collection_exists(collection):
+        client.delete_collection(collection)
     client.create_collection(
-        QDRANT_COLLECTION,
+        collection,
         vectors_config=VectorParams(
             size=len(vectors[0]), distance=Distance.COSINE
         ),
     )
     client.upload_points(
-        QDRANT_COLLECTION,
+        collection,
         points=[
             PointStruct(id=i, vector=v, payload=c.model_dump())
             for i, (c, v) in enumerate(zip(chunks, vectors))

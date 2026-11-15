@@ -25,7 +25,9 @@ TITLE_SYSTEM = (
     "Reply with the title only, without quotes or final punctuation."
 )
 STOPWORDS_EN_FR = STOPWORDS_EN + STOPWORDS_FRENCH
-STEMMER = Stemmer.Stemmer(os.environ.get("BM25_STEMMER_LANG", "french"))
+# lowercased: PyStemmer and Qdrant both expect e.g. "english"
+STEMMER_LANG = os.environ.get("BM25_STEMMER_LANG", "english").lower()
+STEMMER = Stemmer.Stemmer(STEMMER_LANG)
 INDEX_DIR = os.environ.get("BM25_INDEX_DIR", "data/processed/bm25_index/")
 CHUNKS_DIR = os.environ.get("CHUNKS_DIR", "data/processed/chunks/")
 CHUNKS_PATH = os.path.join(CHUNKS_DIR, "chunks.json")
@@ -33,3 +35,6 @@ EMBED_HOST = os.environ.get("EMBED_HOST", "http://localhost:11434")
 EMBED_MODEL = os.environ.get("EMBED_MODEL", "BGE-M3")
 QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
 QDRANT_COLLECTION = os.environ.get("QDRANT_COLLECTION", "chunks")
+QDRANT_HYBRID_COLLECTION = os.environ.get(
+    "QDRANT_HYBRID_COLLECTION", "chunks_hybrid"
+)
