@@ -2,12 +2,12 @@
 
 # 🔎 RAG — Ask Questions about Your Docs
 
-**A 100% local RAG: BM25 or vector search + an Ollama LLM.**
+**A 100% local RAG: BM25, vector or hybrid search + an Ollama LLM.**
 Point it at a folder, ask a question, get an answer grounded in your files.
 
 ![Python](https://img.shields.io/badge/python-≥3.10-3776AB?logo=python&logoColor=white)
 ![Ollama](https://img.shields.io/badge/LLM-Ollama-000000?logo=ollama&logoColor=white)
-![Retrieval](https://img.shields.io/badge/retrieval-BM25%20%7C%20embeddings-orange)
+![Retrieval](https://img.shields.io/badge/retrieval-BM25%20%7C%20embeddings%20%7C%20hybrid-orange)
 ![Qdrant](https://img.shields.io/badge/vector%20DB-Qdrant-DC244C)
 ![Local](https://img.shields.io/badge/100%25-local-success)
 ![License](https://img.shields.io/github/license/ynsz-66/RAG)
@@ -19,7 +19,7 @@ Point it at a folder, ask a question, get an answer grounded in your files.
 ## ✨ Features
 
 - 🔒 **Fully local**: no API key, nothing sent to the cloud
-- 🔀 **Pluggable retrieval**: BM25 keywords or semantic embeddings, selected with `--method`
+- 🔀 **Pluggable retrieval**: BM25 keywords, semantic embeddings, or both fused (hybrid), selected with `--method`
 - 📂 **Multi-format**: `.md`, `.py`, `.pdf`, `.txt`
 - ✂️ **Format-aware chunking**: Markdown by headings, Python by AST, PDF by page, text by lines
 - 🌍 **Answers in your language**, even when the sources are in another
@@ -31,7 +31,7 @@ Point it at a folder, ask a question, get an answer grounded in your files.
                                     ┌─ bm25 ──────▶ BM25 index (files on disk)
  docs folder ──▶ chunking ──▶ index ┤
                                     ├─ embedding ─▶ Ollama embeddings ──▶ Qdrant
-                                    └─ hybrid ────▶ both  (🚧 planned)
+                                    └─ hybrid ────▶ embeddings + BM25 text index ──▶ Qdrant
                                                          │
  question ───────────────── same method ────────────────▶│ top-k chunks
                                                          ▼
@@ -49,10 +49,29 @@ Point it at a folder, ask a question, get an answer grounded in your files.
 |-------------|-------------------------------------------------------|---------------------------------|-----------------|
 | `bm25` *(default)* | Shared keywords (stopwords removed, stemmed)   | `data/processed/` (files)       | nothing         |
 | `embedding` | Cosine similarity of [BGE-M3](https://ollama.com/library/bge-m3) vectors | [Qdrant](https://qdrant.tech) collection | Ollama + Qdrant |
-| `hybrid`    | 🚧 *Planned*: fuse the BM25 and embedding rankings     | both                            | Ollama + Qdrant |
+| `hybrid`    | BM25 and embedding rankings fused with RRF             | Qdrant collection `chunks_hybrid` | Ollama + Qdrant |
 
 - **BM25** is fast and exact on names, flags and identifiers (`/v1/load_lora_adapter`, `--max-model-len`).
 - **Embeddings** match meaning, so they find a chunk even when it uses other words than the question.
+- **Hybrid** gets the best of both: exact keywords *and* meaning.
+
+### How `hybrid` works
+
+Everything lives in a single Qdrant collection, and the fusion is done **server-side** by Qdrant:
+
+```
+ index:  chunk ──▶ BGE-M3 vector ───────────────┐
+           └────▶ full-text index (BM25 scoring)┴──▶ Qdrant `chunks_hybrid`
+
+ query:  question ─┬─▶ dense search  (top 100) ─┐
+                   └─▶ BM25 search   (top 100) ─┴─▶ RRF fusion ──▶ top-k
+```
+
+1. **Index**: each chunk is stored with its embedding, and Qdrant builds a full-text index on its
+   content (same stemmer `BM25_STEMMER_LANG` and stopwords as the `bm25` method).
+2. **Retrieve**: the question runs through both searches, then
+   [Reciprocal Rank Fusion](https://qdrant.tech/documentation/concepts/hybrid-queries/) merges the two
+   rankings: a chunk ranked well by both lists ends up on top, without having to compare their scores.
 
 Each method has its own index: run `index` once per method you want to use.
 
@@ -61,13 +80,13 @@ Each method has its own index: run `index` once per method you want to use.
 ### 1. Install
 
 Requirements: Python ≥ 3.10, [`uv`](https://docs.astral.sh/uv/), [Ollama](https://ollama.com),
-and [Docker](https://docs.docker.com/get-docker/) for the `embedding` method.
+and [Docker](https://docs.docker.com/get-docker/) for the `embedding` and `hybrid` methods.
 
 ```bash
 git clone git@github.com:ynsz-66/RAG.git rag && cd rag
 make install                # uv sync
 ollama pull qwen3:0.6b        # answer model, ~522 MB
-ollama pull bge-m3          # embedding model (only for --method embedding)
+ollama pull bge-m3          # embedding model (only for --method embedding / hybrid)
 ```
 
 ### 2. Start the services
@@ -94,6 +113,7 @@ cp .env.example .env
 | `EMBED_MODEL`       | `BGE-M3`                 | Embedding model                                        |
 | `QDRANT_URL`        | `http://localhost:6333`  | Qdrant server URL                                      |
 | `QDRANT_COLLECTION` | `chunks`                 | Qdrant collection holding the chunks                   |
+| `QDRANT_HYBRID_COLLECTION` | `chunks_hybrid`   | Qdrant collection used by the `hybrid` method          |
 
 BM25 applies **one** stemmer to the whole corpus: if 90% of your documents are French, use `french`;
 if they are mostly English, use `english`. Any [Snowball](https://snowballstem.org/) language works.
@@ -102,7 +122,7 @@ Re-run the indexing after changing it (or after changing `EMBED_MODEL`).
 ### 4. Run
 
 ```bash
-make index    [RAW=path/] [METHOD=bm25|embedding]          # chunk + index
+make index    [RAW=path/] [METHOD=bm25|embedding|hybrid]   # chunk + index
 make retrieve Q="your question" [K=10] [METHOD=...]       # print the top-K sources
 make answer   Q="your question" [K=10] [KEEP=3] [METHOD=...]  # stream an answer from the top KEEP sources
 ```
@@ -110,11 +130,20 @@ make answer   Q="your question" [K=10] [KEEP=3] [METHOD=...]  # stream an answer
 Each target wraps `uv run python -m src <index|retrieve|answer> ... --method <method>`.
 Index once (and again after changing the corpus), then query as many times as you want.
 
+For example, with the hybrid method (needs `make up`):
+
+```bash
+make index METHOD=hybrid
+make retrieve Q="How do I load a LoRA adapter?" METHOD=hybrid
+make answer   Q="How do I load a LoRA adapter?" METHOD=hybrid
+```
+
 ## 🗄️ Qdrant dashboard
 
 With `make up` running, open **<http://localhost:6333/dashboard>**.
 After `make index METHOD=embedding`, the `chunks` collection holds one point per chunk:
 its BGE-M3 vector plus the chunk (file path, character range, content) as payload.
+`make index METHOD=hybrid` fills a separate `chunks_hybrid` collection (vectors + full-text index).
 Open the collection and its **Graph** tab to explore neighbouring chunks:
 
 <div align="center">
@@ -181,7 +210,7 @@ make answer-dataset STUDENT_SEARCH_RESULTS_PATH=results/search/dataset_docs_publ
 | `answer-dataset` | `search-dataset` output           | the same results, plus an `answer` per question |
 
 All targets accept `K`, `KEEP` and `METHOD`. To compare methods, index and search once per method
-(e.g. `METHOD=embedding SAVE_DIRECTORY=results/embedding`).
+(e.g. `METHOD=hybrid SAVE_DIRECTORY=results/hybrid`).
 Use a different `SAVE_DIRECTORY` per step or method: outputs keep the input's file name and overwrite each other.
 
 > [!NOTE]
