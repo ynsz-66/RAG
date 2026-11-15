@@ -10,8 +10,7 @@ from src.var import RERANKER_MODEL
 @lru_cache(maxsize=1)
 def get_reranker() -> TextCrossEncoder:
     """Load the cross-encoder once, on first use (downloads it if missing)."""
-    print(f"Loading reranker {RERANKER_MODEL} "
-          "(first run downloads ~2.3 GB)...")
+    print(f"Loading reranker {RERANKER_MODEL}")
     return TextCrossEncoder(model_name=RERANKER_MODEL)
 
 
