@@ -38,3 +38,11 @@ QDRANT_COLLECTION = os.environ.get("QDRANT_COLLECTION", "chunks")
 QDRANT_HYBRID_COLLECTION = os.environ.get(
     "QDRANT_HYBRID_COLLECTION", "chunks_hybrid"
 )
+RERANK_CANDIDATES = int(os.environ.get("RERANK_CANDIDATES", 50))
+RERANKER_MODEL = os.environ.get("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
+REWRITE_SYSTEM = (
+    "Rewrite the user's question into a short search query for a technical "
+    "documentation and code corpus (vLLM). Keep exact identifiers, function, "
+    "class and file names; add likely technical keywords and synonyms. "
+    "Answer with the query only, in English, on one line."
+)
