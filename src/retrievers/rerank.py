@@ -20,7 +20,8 @@ def rerank(
     """Score (query, chunk) pairs with the cross-encoder, keep top-``k``."""
     if not sources:
         return []
-    scores = get_reranker().rerank(query, [s.content for s in sources])
+    texts = [f"{s.file_path}\n{s.content}" for s in sources]
+    scores = get_reranker().rerank(query, texts)
     ranked = sorted(
         zip(scores, sources), key=lambda pair: pair[0], reverse=True
     )
