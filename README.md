@@ -73,15 +73,24 @@ cp .env.example .env
 |----------------|--------------------------|-----------------------------------------------------|
 | `OLLAMA_HOST`  | `http://localhost:11434` | Ollama server URL                                   |
 | `OLLAMA_MODEL` | `qwen3:8b`               | Any model installed locally                         |
-| `BM25_LANG`    | `fr`                     | Stopwords language: set `en` for an English corpus  |
+| `BM25_STEMMER_LANG` | `french`            | Stemmer language: the majority language of your corpus |
+
+BM25 applies **one** stemmer to the whole corpus, so set `BM25_STEMMER_LANG` to the language most of
+your documents are written in: if 90% of the corpus is French, use `french`; if it is mostly English,
+use `english`. Any [Snowball](https://snowballstem.org/) language works (`german`, `spanish`, …).
+Re-run the indexing after changing it.
 
 ### 4. Run
 
 ```bash
-make app
+uv run python -m src index [raw_path] [--max-chunk-size 2000]   # chunk + index (default: data/raw/)
+uv run python -m src retrieve "your question" [-k 10]          # print the top-k sources
+uv run python -m src answer "your question" [-k 10] [--keep 3]  # stream an answer from the top sources
 ```
 
-In the UI, select the folder to index, then ask your questions.
+All three commands take `--method bm25|embedding|hybrid` (default `bm25`; `embedding` and `hybrid` are not implemented yet).
+
+Index once (and again after changing the corpus), then run `retrieve` or `answer` as many times as you want.
 
 ## 🛠️ Commands
 
@@ -90,7 +99,6 @@ In the UI, select the folder to index, then ask your questions.
 | `make install`     | Install dependencies (`uv sync`)                        |
 | `make app`         | Launch the Textual interface                            |
 | `make lint`        | Run flake8 + mypy                                       |
-| `make lint-strict` | Strict lint                                             |
 | `make clean`       | Remove venv, caches and `data/processed/`               |
 
 ## 🧱 Stack

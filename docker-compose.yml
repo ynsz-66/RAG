@@ -1,0 +1,10 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.20.0
+    ports:
+      - "127.0.0.1:6333:6333"   # REST
+      - "127.0.0.1:6334:6334"   # gRPC
+    environment:
+      QDRANT_TELEMETRY_DISABLED: "true"
+    volumes:
+      - ./qdrant_storage:/qdrant/storage:z

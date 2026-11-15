@@ -30,44 +30,47 @@ def get_pdf_chunks(
     max_chunk_size: int,
     chunks: List[Chunk],
 ) -> None:
-    """Chunk raw PDF bytes page by page."""
-    pages = extract_text_from_pdf(content)
+    """Chunk raw PDF bytes page by page.
 
-    for page in pages:
+    shortcut: offsets index the concatenated extracted page text, not the
+    PDF bytes; enough while no evaluation dataset targets PDFs.
+    """
+    def add(text: str, start: int) -> None:
+        chunks.append(Chunk(
+            file_path=file_path,
+            content=text,
+            type=".pdf",
+            first_character_index=start,
+            last_character_index=start + len(text),
+        ))
+
+    page_start = 0
+    for page in extract_text_from_pdf(content):
         if len(page) <= max_chunk_size:
-            chunks.append(Chunk(
-                file_path=file_path,
-                content=page,
-                type=".pdf",
-            ))
+            add(page, page_start)
+            page_start += len(page)
             continue
 
-        page_lines = page.split("\n")
         buf = ""
-        for line in page_lines:
+        buf_start = page_start
+        pos = page_start
+        for line in page.split("\n"):
             piece = line + "\n"
             if len(buf) + len(piece) <= max_chunk_size:
+                if not buf:
+                    buf_start = pos
                 buf += piece
             else:
                 if buf:
-                    chunks.append(Chunk(
-                        file_path=file_path,
-                        content=buf,
-                        type=".pdf",
-                    ))
+                    add(buf, buf_start)
                 if len(piece) > max_chunk_size:
                     for i in range(0, len(piece), max_chunk_size):
-                        chunks.append(Chunk(
-                            file_path=file_path,
-                            content=piece[i:i + max_chunk_size],
-                            type=".pdf",
-                        ))
+                        add(piece[i:i + max_chunk_size], pos + i)
                     buf = ""
                 else:
                     buf = piece
+                    buf_start = pos
+            pos += len(piece)
         if buf:
-            chunks.append(Chunk(
-                file_path=file_path,
-                content=buf,
-                type=".pdf",
-            ))
+            add(buf, buf_start)
+        page_start += len(page)

@@ -23,15 +23,18 @@ def flush(
     chunks: List[Chunk],
     file_path: str,
     buf: str,
+    start: int,
     header: str = "",
 ) -> None:
-    """Append ``header + buf`` as a chunk if ``buf`` is not empty."""
+    """Append ``header + buf`` (``buf`` starting at ``start``) if not empty."""
     if not buf:
         return
     chunks.append(Chunk(
         file_path=file_path,
         content=header + buf,
         type=".py",
+        first_character_index=start,
+        last_character_index=start + len(buf),
     ))
 
 
@@ -39,36 +42,37 @@ def append_split(
     chunks: List[Chunk],
     file_path: str,
     content: str,
+    start: int,
     max_chunk_size: int,
     header: str = "",
 ) -> None:
-    """Append ``content`` as size-bounded chunks prefixed by ``header``."""
+    """Append ``content`` (at offset ``start``) as size-bounded chunks."""
     effective_max = max(1, max_chunk_size - len(header))
 
     if len(content) <= effective_max:
-        if content:
-            chunks.append(Chunk(
-                file_path=file_path,
-                content=header + content,
-                type=".py",
-            ))
+        flush(chunks, file_path, content, start, header)
         return
 
-    lines = content.splitlines(keepends=True)
     buf = ""
-    for line in lines:
+    buf_start = start
+    pos = start
+    for line in content.splitlines(keepends=True):
         if len(line) > effective_max:
-            flush(chunks, file_path, buf, header)
+            flush(chunks, file_path, buf, buf_start, header)
             buf = ""
             for i in range(0, len(line), effective_max):
                 piece = line[i:i + effective_max]
-                flush(chunks, file_path, piece, header)
+                flush(chunks, file_path, piece, pos + i, header)
         elif len(buf) + len(line) <= effective_max:
+            if not buf:
+                buf_start = pos
             buf += line
         else:
-            flush(chunks, file_path, buf, header)
+            flush(chunks, file_path, buf, buf_start, header)
             buf = line
-    flush(chunks, file_path, buf, header)
+            buf_start = pos
+        pos += len(line)
+    flush(chunks, file_path, buf, buf_start, header)
 
 
 def get_python_chunks(
@@ -107,6 +111,7 @@ def get_python_chunks(
                 chunks,
                 file_path,
                 header_text,
+                line_offsets[cursor],
                 max_chunk_size,
             )
 
@@ -120,6 +125,7 @@ def get_python_chunks(
             chunks,
             file_path,
             text,
+            line_offsets[start_line],
             max_chunk_size,
             node_header,
         )
@@ -132,5 +138,6 @@ def get_python_chunks(
             chunks,
             file_path,
             final_text,
+            line_offsets[cursor],
             max_chunk_size,
         )
