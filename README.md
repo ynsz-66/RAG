@@ -100,6 +100,61 @@ Index once (and again after changing the corpus), then run `retrieve` or `answer
 | `make app`         | Launch the Textual interface                            |
 | `make lint`        | Run flake8 + mypy                                       |
 | `make clean`       | Remove venv, caches and `data/processed/`               |
+| `make fetch-vllm`  | Download the vLLM v0.10.1 sources used by the evaluation |
+
+## 📊 Evaluation
+
+Retrieval quality is measured on a public benchmark of questions about the
+[vLLM](https://github.com/vllm-project/vllm) **v0.10.1** codebase and docs.
+
+```
+datasets_public/public/
+├── AnsweredQuestions/     # questions + ground-truth sources + reference answer
+│   ├── dataset_docs_public.json   # questions about the Markdown docs
+│   └── dataset_code_public.json   # questions about the Python code
+└── UnansweredQuestions/   # same questions, without ground truth
+```
+
+Each ground-truth source is a file path and a character range, e.g.
+`data/raw/vllm-0.10.1/docs/features/lora.md [4695:6098]`, so the corpus must be
+**exactly** vLLM v0.10.1, extracted at that path.
+
+### Run it
+
+```bash
+make fetch-vllm      # downloads vLLM v0.10.1 into data/raw/vllm-0.10.1/
+make index           # RAW defaults to data/raw/vllm-0.10.1/
+
+DS=datasets_public/public/AnsweredQuestions/dataset_docs_public.json
+
+# 1. Retrieve the top-K sources for every question
+make search-dataset DATASET_PATH=$DS SAVE_DIRECTORY=results/search
+
+# 2. Score them against the ground truth
+make evaluate STUDENT_ANSWER_PATH=results/search/dataset_docs_public.json DATASET_PATH=$DS
+
+# 3. (optional) Generate an LLM answer per question from its top KEEP sources (needs Ollama)
+make answer-dataset STUDENT_SEARCH_RESULTS_PATH=results/search/dataset_docs_public.json \
+                    SAVE_DIRECTORY=results/answers
+```
+
+| Target           | Input                             | Output (same file name, in `SAVE_DIRECTORY`) |
+|------------------|-----------------------------------|----------------------------------------------|
+| `search-dataset` | a dataset JSON                    | top-`K` retrieved sources per question       |
+| `evaluate`       | `search-dataset` output + dataset | Recall@1, @3, @5, @`K` printed to the terminal |
+| `answer-dataset` | `search-dataset` output           | the same results, plus an `answer` per question |
+
+All targets accept `K`, `KEEP` and `METHOD` (`bm25` or `embedding`; `embedding` needs `make up` for Qdrant).
+Use a different `SAVE_DIRECTORY` per step or method: outputs keep the input's file name and overwrite each other.
+
+> [!NOTE]
+> `evaluate` only works with `AnsweredQuestions/` datasets, since the unanswered ones have no ground truth.
+
+### Metric
+
+A ground-truth source counts as **found** when a retrieved chunk from the same file
+overlaps at least **5 %** of its character range.
+**Recall@k** is the share of ground-truth sources found in the top-k chunks, averaged over all questions.
 
 ## 🧱 Stack
 

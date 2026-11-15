@@ -183,3 +183,7 @@ CLAUDE*
 
 # ollama serve logs
 .ollama.log
+
+# evaluation outputs
+tests/
+results/

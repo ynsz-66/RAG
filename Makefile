@@ -2,7 +2,9 @@
 
 PYTHON      = python3
 ENV         = .venv/
-RAW         = data/raw/vllm-0.10.1/
+VLLM_VERSION = 0.10.1
+VLLM_DIR     = data/raw/vllm-$(VLLM_VERSION)
+RAW          = $(VLLM_DIR)/
 
 MAX_CHUNK_SIZE  = 2000
 
@@ -14,6 +16,15 @@ K       = 10
 KEEP    = 3
 Q       =
 
+DATASET_PATH                =
+SAVE_DIRECTORY              =
+STUDENT_SEARCH_RESULTS_PATH =
+STUDENT_ANSWER_PATH         =
+
+define require
+@test -n "$($(1))" || { printf "$(RED)Missing $(1)=... (make $(MAKECMDGOALS) $(1)=path)$(RESET)\n"; exit 1; }
+endef
+
 GREEN   = \033[0;32m
 CYAN    = \033[0;36m
 YELLOW  = \033[0;33m
@@ -21,9 +32,10 @@ RED     = \033[0;31m
 BOLD    = \033[1m
 RESET   = \033[0m
 
-.PHONY: all help install lint \
+.PHONY: all help install lint fetch-vllm \
 	check-ollama up down clean fclean re \
-	index retrieve answer check-q
+	index retrieve answer check-q \
+	search-dataset answer-dataset evaluate
 
 all: help
 
@@ -31,6 +43,7 @@ help:
 	@printf "$(BOLD)RAG$(RESET) — available targets\n\n"
 	@printf "$(BOLD)Setup$(RESET)\n"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "install"  "Install dependencies via uv"
+	@printf "  $(CYAN)%-12s$(RESET) %s\n" "fetch-vllm" "Download vLLM v$(VLLM_VERSION) sources into $(VLLM_DIR)"
 	@printf "\n$(BOLD)Services$(RESET)\n"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "up"       "Check ollama, start ollama serve + Qdrant container"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "down"     "Stop the Qdrant container"
@@ -41,6 +54,10 @@ help:
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "index"    "Index RAW with METHOD"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "retrieve" "Top-K chunks for Q=\"...\""
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "answer"   "LLM answer for Q=\"...\" (needs make up)"
+	@printf "\n$(BOLD)Evaluation$(RESET)\n"
+	@printf "  $(CYAN)%-16s$(RESET) %s\n" "search-dataset" "Top-K sources per question: DATASET_PATH -> SAVE_DIRECTORY"
+	@printf "  $(CYAN)%-16s$(RESET) %s\n" "answer-dataset" "LLM answers: STUDENT_SEARCH_RESULTS_PATH -> SAVE_DIRECTORY"
+	@printf "  $(CYAN)%-16s$(RESET) %s\n" "evaluate"       "Recall@1/3/5/K of STUDENT_ANSWER_PATH vs DATASET_PATH"
 	@printf "\n$(BOLD)Lint$(RESET)\n"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "lint"        "flake8 + mypy (standard rules)"
 	@printf "\n$(BOLD)Overridable variables$(RESET)\n"
@@ -54,6 +71,17 @@ help:
 
 install:
 	@uv sync
+
+# Evaluation corpus: the datasets reference files under data/raw/vllm-0.10.1/
+fetch-vllm:
+	@if [ -d $(VLLM_DIR) ]; then \
+		printf "$(GREEN)$(VLLM_DIR) already present$(RESET)\n"; \
+	else \
+		mkdir -p data/raw && \
+		curl -fsSL https://github.com/vllm-project/vllm/archive/refs/tags/v$(VLLM_VERSION).tar.gz \
+			| tar -xz -C data/raw && \
+		printf "$(GREEN)vLLM v$(VLLM_VERSION) extracted to $(VLLM_DIR)$(RESET)\n"; \
+	fi
 
 
 check-ollama:
@@ -107,6 +135,21 @@ retrieve: check-q
 
 answer: check-q
 	@uv run $(PYTHON) -m src answer "$(Q)" -k $(K) --keep $(KEEP) --method $(METHOD)
+
+search-dataset:
+	$(call require,DATASET_PATH)
+	$(call require,SAVE_DIRECTORY)
+	@uv run $(PYTHON) -m src search_dataset $(DATASET_PATH) $(SAVE_DIRECTORY) --k $(K) --method $(METHOD)
+
+answer-dataset:
+	$(call require,STUDENT_SEARCH_RESULTS_PATH)
+	$(call require,SAVE_DIRECTORY)
+	@uv run $(PYTHON) -m src answer_dataset $(STUDENT_SEARCH_RESULTS_PATH) $(SAVE_DIRECTORY) --keep $(KEEP)
+
+evaluate:
+	$(call require,STUDENT_ANSWER_PATH)
+	$(call require,DATASET_PATH)
+	@uv run $(PYTHON) -m src evaluate $(STUDENT_ANSWER_PATH) $(DATASET_PATH) --k $(K)
 
 
 lint:
