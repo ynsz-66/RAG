@@ -46,7 +46,8 @@ def create_chunk(
 
     for directory, _, files in os.walk(what_to_read):
         for name in files:
-            file_path = os.path.join(directory, name)
+            # normpath: "./data/raw" and "data/raw" must yield the same ids
+            file_path = os.path.normpath(os.path.join(directory, name))
             ext = os.path.splitext(name)[1].lower()
             if ext not in EXTENSIONS:
                 continue
