@@ -1,13 +1,14 @@
 <div align="center">
 
-# 🔎 RAG — Keyword Search over Your Docs
+# 🔎 RAG — Ask Questions about Your Docs
 
-**A simple, 100% local RAG: BM25 keyword retrieval + an Ollama LLM.**
+**A 100% local RAG: BM25 or vector search + an Ollama LLM.**
 Point it at a folder, ask a question, get an answer grounded in your files.
 
 ![Python](https://img.shields.io/badge/python-≥3.10-3776AB?logo=python&logoColor=white)
 ![Ollama](https://img.shields.io/badge/LLM-Ollama-000000?logo=ollama&logoColor=white)
-![Retrieval](https://img.shields.io/badge/retrieval-BM25-orange)
+![Retrieval](https://img.shields.io/badge/retrieval-BM25%20%7C%20embeddings-orange)
+![Qdrant](https://img.shields.io/badge/vector%20DB-Qdrant-DC244C)
 ![Local](https://img.shields.io/badge/100%25-local-success)
 ![License](https://img.shields.io/github/license/ynsz-66/RAG)
 
@@ -18,50 +19,65 @@ Point it at a folder, ask a question, get an answer grounded in your files.
 ## ✨ Features
 
 - 🔒 **Fully local**: no API key, nothing sent to the cloud
+- 🔀 **Pluggable retrieval**: BM25 keywords or semantic embeddings, selected with `--method`
 - 📂 **Multi-format**: `.md`, `.py`, `.pdf`, `.txt`
 - ✂️ **Format-aware chunking**: Markdown by headings, Python by AST, PDF by page, text by lines
-- ⚡ **Lightweight**: no GPU needed for retrieval, the index is just files on disk
 - 🌍 **Answers in your language**, even when the sources are in another
-- 💬 **Terminal UI** ([Textual](https://textual.textualize.io/)) with streamed Markdown answers and saved conversation history
+- 📊 **Measured**: Recall@k evaluation on a public benchmark ([Evaluation](#-evaluation))
 
 ## ⚙️ How it works
 
 ```
-                 ┌──────────────┐     ┌─────────────┐
- docs folder ──▶ │   chunking   │ ──▶ │ BM25 index  │   (keywords, on disk)
-                 └──────────────┘     └──────┬──────┘
-                                             │ top-k chunks
- question ───────────── tokenize ───────────▶│
-                                             ▼
-                                      ┌─────────────┐
-                                      │ Ollama LLM  │ ──▶ answer
-                                      └─────────────┘
+                                    ┌─ bm25 ──────▶ BM25 index (files on disk)
+ docs folder ──▶ chunking ──▶ index ┤
+                                    ├─ embedding ─▶ Ollama embeddings ──▶ Qdrant
+                                    └─ hybrid ────▶ both  (🚧 planned)
+                                                         │
+ question ───────────────── same method ────────────────▶│ top-k chunks
+                                                         ▼
+                                                   Ollama LLM ──▶ answer
 ```
 
-1. **Index**: files are split into chunks, tokenized (with stopwords removed)
-   and stored as a BM25 index in `data/processed/`.
-2. **Retrieve**: your question is tokenized the same way; the top-k chunks
-   that share the most relevant keywords are selected.
-3. **Generate**: those chunks are sent as context to a local Ollama model,
+1. **Index**: files are split into chunks, then indexed with the chosen method.
+2. **Retrieve**: the question goes through the same method; the top-k chunks are selected.
+3. **Generate**: the best chunks are sent as context to a local Ollama model,
    which answers **only** from the sources (or says *"Not found in the sources."*).
+
+## 🔀 Retrieval methods
+
+| `--method`  | How it ranks chunks                                   | Storage                         | Needs           |
+|-------------|-------------------------------------------------------|---------------------------------|-----------------|
+| `bm25` *(default)* | Shared keywords (stopwords removed, stemmed)   | `data/processed/` (files)       | nothing         |
+| `embedding` | Cosine similarity of [BGE-M3](https://ollama.com/library/bge-m3) vectors | [Qdrant](https://qdrant.tech) collection | Ollama + Qdrant |
+| `hybrid`    | 🚧 *Planned*: fuse the BM25 and embedding rankings     | both                            | Ollama + Qdrant |
+
+- **BM25** is fast and exact on names, flags and identifiers (`/v1/load_lora_adapter`, `--max-model-len`).
+- **Embeddings** match meaning, so they find a chunk even when it uses other words than the question.
+
+Each method has its own index: run `index` once per method you want to use.
 
 ## 🚀 Quick start
 
 ### 1. Install
 
-Requirements: Python ≥ 3.10, [`uv`](https://docs.astral.sh/uv/) and [Ollama](https://ollama.com).
+Requirements: Python ≥ 3.10, [`uv`](https://docs.astral.sh/uv/), [Ollama](https://ollama.com),
+and [Docker](https://docs.docker.com/get-docker/) for the `embedding` method.
 
 ```bash
 git clone git@github.com:ynsz-66/RAG.git rag && cd rag
-make install        # uv sync
+make install                # uv sync
+ollama pull qwen3:0.6b        # answer model, ~522 MB
+ollama pull bge-m3          # embedding model (only for --method embedding)
 ```
 
-### 2. Start Ollama
+### 2. Start the services
 
 ```bash
-ollama serve                # API on http://localhost:11434
-ollama pull qwen3:8b        # ~5 GB, good quality/RAM trade-off
+make up      # starts `ollama serve` + the Qdrant container (docker compose)
+make down    # stops Qdrant
 ```
+
+`bm25` only needs Ollama for `answer`; `retrieve` works with no service running.
 
 ### 3. Configure *(optional)*
 
@@ -69,38 +85,58 @@ ollama pull qwen3:8b        # ~5 GB, good quality/RAM trade-off
 cp .env.example .env
 ```
 
-| Variable       | Default                  | Description                                         |
-|----------------|--------------------------|-----------------------------------------------------|
-| `OLLAMA_HOST`  | `http://localhost:11434` | Ollama server URL                                   |
-| `OLLAMA_MODEL` | `qwen3:8b`               | Any model installed locally                         |
-| `BM25_STEMMER_LANG` | `french`            | Stemmer language: the majority language of your corpus |
+| Variable            | Default                  | Description                                            |
+|---------------------|--------------------------|--------------------------------------------------------|
+| `OLLAMA_HOST`       | `http://localhost:11434` | Ollama server URL                                      |
+| `OLLAMA_MODEL`      | `qwen3:0.6b`               | Answer model, any model installed locally              |
+| `BM25_STEMMER_LANG` | `french`                 | Stemmer language: the majority language of your corpus |
+| `EMBED_HOST`        | `http://localhost:11434` | Ollama server used for embeddings                      |
+| `EMBED_MODEL`       | `BGE-M3`                 | Embedding model                                        |
+| `QDRANT_URL`        | `http://localhost:6333`  | Qdrant server URL                                      |
+| `QDRANT_COLLECTION` | `chunks`                 | Qdrant collection holding the chunks                   |
 
-BM25 applies **one** stemmer to the whole corpus, so set `BM25_STEMMER_LANG` to the language most of
-your documents are written in: if 90% of the corpus is French, use `french`; if it is mostly English,
-use `english`. Any [Snowball](https://snowballstem.org/) language works (`german`, `spanish`, …).
-Re-run the indexing after changing it.
+BM25 applies **one** stemmer to the whole corpus: if 90% of your documents are French, use `french`;
+if they are mostly English, use `english`. Any [Snowball](https://snowballstem.org/) language works.
+Re-run the indexing after changing it (or after changing `EMBED_MODEL`).
 
 ### 4. Run
 
 ```bash
-uv run python -m src index [raw_path] [--max-chunk-size 2000]   # chunk + index (default: data/raw/)
-uv run python -m src retrieve "your question" [-k 10]          # print the top-k sources
-uv run python -m src answer "your question" [-k 10] [--keep 3]  # stream an answer from the top sources
+make index    [RAW=path/] [METHOD=bm25|embedding]          # chunk + index
+make retrieve Q="your question" [K=10] [METHOD=...]       # print the top-K sources
+make answer   Q="your question" [K=10] [KEEP=3] [METHOD=...]  # stream an answer from the top KEEP sources
 ```
 
-All three commands take `--method bm25|embedding|hybrid` (default `bm25`; `embedding` and `hybrid` are not implemented yet).
+Each target wraps `uv run python -m src <index|retrieve|answer> ... --method <method>`.
+Index once (and again after changing the corpus), then query as many times as you want.
 
-Index once (and again after changing the corpus), then run `retrieve` or `answer` as many times as you want.
+## 🗄️ Qdrant dashboard
+
+With `make up` running, open **<http://localhost:6333/dashboard>**.
+After `make index METHOD=embedding`, the `chunks` collection holds one point per chunk:
+its BGE-M3 vector plus the chunk (file path, character range, content) as payload.
+Open the collection and its **Graph** tab to explore neighbouring chunks:
+
+<div align="center">
+  <img src="assets/qdrant-dashboard.png" alt="Qdrant dashboard: graph of the chunks collection" width="800">
+</div>
+
+The data lives in `qdrant_storage/` (gitignored); `make fclean` deletes it.
 
 ## 🛠️ Commands
 
-| Command            | Description                                             |
-|--------------------|---------------------------------------------------------|
-| `make install`     | Install dependencies (`uv sync`)                        |
-| `make app`         | Launch the Textual interface                            |
-| `make lint`        | Run flake8 + mypy                                       |
-| `make clean`       | Remove venv, caches and `data/processed/`               |
-| `make fetch-vllm`  | Download the vLLM v0.10.1 sources used by the evaluation |
+| Command            | Description                                                |
+|--------------------|------------------------------------------------------------|
+| `make help`        | List all targets and their variables                       |
+| `make install`     | Install dependencies (`uv sync`)                           |
+| `make up` / `down` | Start Ollama + Qdrant / stop Qdrant                        |
+| `make index`       | Index `RAW` with `METHOD`                                  |
+| `make retrieve`    | Top-`K` chunks for `Q`                                     |
+| `make answer`      | LLM answer for `Q`                                         |
+| `make fetch-vllm`  | Download the vLLM v0.10.1 sources used by the evaluation   |
+| `make lint`        | Run flake8 + mypy                                          |
+| `make clean`       | Stop Qdrant, remove venv and caches                        |
+| `make fclean`      | `clean` + delete the Qdrant storage and the BM25 index     |
 
 ## 📊 Evaluation
 
@@ -138,13 +174,14 @@ make answer-dataset STUDENT_SEARCH_RESULTS_PATH=results/search/dataset_docs_publ
                     SAVE_DIRECTORY=results/answers
 ```
 
-| Target           | Input                             | Output (same file name, in `SAVE_DIRECTORY`) |
-|------------------|-----------------------------------|----------------------------------------------|
-| `search-dataset` | a dataset JSON                    | top-`K` retrieved sources per question       |
+| Target           | Input                             | Output (same file name, in `SAVE_DIRECTORY`)   |
+|------------------|-----------------------------------|------------------------------------------------|
+| `search-dataset` | a dataset JSON                    | top-`K` retrieved sources per question         |
 | `evaluate`       | `search-dataset` output + dataset | Recall@1, @3, @5, @`K` printed to the terminal |
 | `answer-dataset` | `search-dataset` output           | the same results, plus an `answer` per question |
 
-All targets accept `K`, `KEEP` and `METHOD` (`bm25` or `embedding`; `embedding` needs `make up` for Qdrant).
+All targets accept `K`, `KEEP` and `METHOD`. To compare methods, index and search once per method
+(e.g. `METHOD=embedding SAVE_DIRECTORY=results/embedding`).
 Use a different `SAVE_DIRECTORY` per step or method: outputs keep the input's file name and overwrite each other.
 
 > [!NOTE]
@@ -158,7 +195,8 @@ overlaps at least **5 %** of its character range.
 
 ## 🧱 Stack
 
-[`bm25s`](https://github.com/xhluca/bm25s) · `httpx` (→ Ollama) · `python-dotenv` · `pypdf` · `pydantic` · `textual`
+[`bm25s`](https://github.com/xhluca/bm25s) · [Qdrant](https://qdrant.tech) + `qdrant-client` ·
+Ollama (`httpx`) · `pydantic` · `pypdf` · `fire` · `python-dotenv`
 
 ## 📄 License
 
