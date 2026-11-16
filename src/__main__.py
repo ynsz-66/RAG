@@ -45,9 +45,10 @@ class CLI:
         k: int = 10,
         method: str = "bm25",
         reranker: bool = False,
+        rewrite: bool = False,
     ) -> None:
         """Print the top-k sources for a query."""
-        sources = get_retriever(method)(str(query), k, reranker)
+        sources = get_retriever(method)(str(query), k, reranker, rewrite)
         for i, source in enumerate(sources, 1):
             print(f"--- [{i}] {source.file_path}\n{source.content}\n")
 
@@ -57,10 +58,11 @@ class CLI:
         keep: int = 3,
         method: str = "bm25",
         reranker: bool = False,
+        rewrite: bool = False,
     ) -> None:
         """Stream an LLM answer from the top sources."""
         query = str(query)
-        sources = get_retriever(method)(query, k, reranker)[:keep]
+        sources = get_retriever(method)(query, k, reranker, rewrite)[:keep]
         context = "\n\n".join(source.content for source in sources)
         prompt = f"Sources:\n{context}\n\nQuestion: {query}"
         print("answering...")
@@ -118,6 +120,7 @@ class CLI:
         k: int = 10,
         method: str = "bm25",
         reranker: bool = False,
+        rewrite: bool = False,
     ) -> None:
         """Batch-search a dataset of questions.
 
@@ -127,6 +130,8 @@ class CLI:
             k: Number of results to retrieve per question.
             method: Retrieval method (bm25 | embedding | hybrid).
             reranker: Rerank candidates with the cross-encoder.
+            rewrite: Rewrite each question per engine (BM25 keywords,
+                dense reformulation); rerank keeps the original.
         """
         with open(dataset_path) as f:
             dataset = RagDataset(**json.load(f))
@@ -134,14 +139,16 @@ class CLI:
             partial(query_index, *load_index())
             if method == "bm25" else get_retriever(method)
         )
-        results = [
-            MinimalSearchResults(
+        results: List[MinimalSearchResults] = []
+        total = len(dataset.rag_questions)
+        for i, q in enumerate(dataset.rag_questions, 1):
+            print(f"[{i}/{total}] {q.question}")
+            results.append(MinimalSearchResults(
                 question_id=q.question_id,
                 question_str=q.question,
-                retrieved_sources=retrieve(q.question, k, reranker),
-            )
-            for q in dataset.rag_questions
-        ]
+                retrieved_sources=retrieve(q.question, k, reranker, rewrite),
+            ))
+            print("-----------")
         save_json(
             StudentSearchResults(
                 search_results=results, k=k

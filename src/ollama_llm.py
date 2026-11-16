@@ -19,17 +19,26 @@ class OllamaLLM:
         model: str | None = None,
         host: str | None = None,
         think: bool = False,
+        temperature: float | None = None,
+        repeat_penalty: float | None = None,
     ) -> None:
         host = host or os.environ.get("OLLAMA_HOST", self.DEFAULT_HOST)
         self.host = host.rstrip("/")
         self.model = model or os.environ.get("OLLAMA_MODEL", "qwen3:8b")
         self.think = think
+        self.temperature = temperature
+        self.repeat_penalty = repeat_penalty
         self.client = httpx.Client(base_url=self.host, timeout=self.TIMEOUT)
 
     def payload(
         self, system: str, user: str, max_new_tokens: int, stream: bool
     ) -> dict[str, Any]:
         """Build the /api/chat request body."""
+        options: dict[str, Any] = {"num_predict": max_new_tokens}
+        if self.temperature is not None:
+            options["temperature"] = self.temperature
+        if self.repeat_penalty is not None:
+            options["repeat_penalty"] = self.repeat_penalty
         return {
             "model": self.model,
             "messages": [
@@ -38,7 +47,7 @@ class OllamaLLM:
             ],
             "stream": stream,
             "think": self.think,
-            "options": {"num_predict": max_new_tokens},
+            "options": options,
         }
 
     def unreachable(self, exc: Exception) -> RuntimeError:

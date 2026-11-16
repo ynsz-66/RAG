@@ -40,9 +40,50 @@ QDRANT_HYBRID_COLLECTION = os.environ.get(
 )
 RERANK_CANDIDATES = int(os.environ.get("RERANK_CANDIDATES", 50))
 RERANKER_MODEL = os.environ.get("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
-REWRITE_SYSTEM = (
-    "Rewrite the user's question into a short search query for a technical "
-    "documentation and code corpus (vLLM). Keep exact identifiers, function, "
-    "class and file names; add likely technical keywords and synonyms. "
-    "Answer with the query only, in English, on one line."
+# None -> OllamaLLM falls back to OLLAMA_MODEL
+REWRITE_MODEL = os.environ.get("REWRITE_MODEL")
+REWRITE_KEYWORDS_SYSTEM = (
+    "You turn a user question about vLLM (an LLM inference engine) into "
+    "search keywords for its documentation and source code.\n"
+    "Rules:\n"
+    "- Output ONE line of 4 to 8 English keywords, space separated.\n"
+    "- Copy exact identifiers unchanged (functions, classes, files, "
+    "flags, env vars).\n"
+    "- Fix typos, expand abbreviations, add close technical synonyms.\n"
+    "- No sentence, no explanation, no quotes, no prefix.\n"
+    "Examples:\n"
+    "Q: how quantize model fp8 ?\n"
+    "fp8 quantization quantize weights activations dtype "
+    "quantization_config\n"
+    "Q: where is LLM.generate defined\n"
+    "LLM.generate class LLM entrypoints llm.py generate method "
+    "definition\n"
+    "Q: comment changer la taille du kv cache\n"
+    "kv cache size gpu_memory_utilization num_gpu_blocks block_size "
+    "memory\n"
+    "Q: multi gpu serve ??\n"
+    "tensor_parallel_size distributed multi-GPU serving "
+    "pipeline_parallel_size vllm serve"
+)
+REWRITE_QUERY_SYSTEM = (
+    "You rewrite a vague or sloppy user question about vLLM (an LLM "
+    "inference engine) into one clear technical question for semantic "
+    "search over its documentation and source code.\n"
+    "Rules:\n"
+    "- Output ONE English sentence, at most 30 words.\n"
+    "- Use precise vLLM vocabulary; keep exact identifiers unchanged.\n"
+    "- Do NOT answer the question. No explanation, no quotes, no prefix.\n"
+    "Examples:\n"
+    "Q: how quantize model fp8 ?\n"
+    "How do I enable FP8 quantization of model weights and activations "
+    "in vLLM?\n"
+    "Q: where is LLM.generate defined\n"
+    "Where is the LLM.generate method of the LLM class defined in the "
+    "vLLM source code?\n"
+    "Q: comment changer la taille du kv cache\n"
+    "How do I configure the KV cache size and GPU memory utilization in "
+    "vLLM?\n"
+    "Q: multi gpu serve ??\n"
+    "How do I serve a model across multiple GPUs with tensor or pipeline "
+    "parallelism in vLLM?"
 )

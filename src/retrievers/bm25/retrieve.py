@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Tuple
 
 import bm25s  # type: ignore[import-untyped]
 from src.retrievers.rerank import rerank
+from src.retrievers.rewrite import keywords_query
 from src.validators import MinimalSource
 from src.var import (
     CHUNKS_PATH,
@@ -32,12 +33,18 @@ def query_index(
     query: str,
     k: int = 10,
     reranker: bool = False,
+    rewrite: bool = False,
 ) -> List[MinimalSource]:
     """Return the top-``k`` sources for ``query``, reranked if asked."""
+    search_query = query
+    if rewrite:
+        search_query = keywords_query(query)
+        print(f"rewrite (bm25): {search_query}")
     candidates = max(k, RERANK_CANDIDATES) if reranker else k
     print("tokenize query...")
     query_tokens = bm25s.tokenize(
-        query, stopwords=STOPWORDS_EN_FR, stemmer=STEMMER, show_progress=False
+        search_query, stopwords=STOPWORDS_EN_FR, stemmer=STEMMER,
+        show_progress=False,
     )
     print("retrieve...")
     results, _ = retriever.retrieve(
@@ -54,8 +61,8 @@ def query_index(
 
 
 def retrieve(
-    query: str, k: int = 10, reranker: bool = False
+    query: str, k: int = 10, reranker: bool = False, rewrite: bool = False
 ) -> List[MinimalSource]:
     """Load the index from disk and return the top-``k`` sources."""
     retriever, chunks_meta = load_index()
-    return query_index(retriever, chunks_meta, query, k, reranker)
+    return query_index(retriever, chunks_meta, query, k, reranker, rewrite)

@@ -13,6 +13,7 @@ QDRANT_STORAGE  = qdrant_storage/
 
 METHOD   = bm25
 RERANKER = False
+REWRITE  = False
 K        = 10
 KEEP     = 3
 Q        =
@@ -66,6 +67,7 @@ help:
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "METHOD"         "$(METHOD)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "K"              "$(K)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "RERANKER"       "$(RERANKER)"
+	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "REWRITE"        "$(REWRITE)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "KEEP"           "$(KEEP)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "MAX_CHUNK_SIZE" "$(MAX_CHUNK_SIZE)"
 	@printf "\n$(BOLD)Example$(RESET)\n"
@@ -133,15 +135,15 @@ index:
 	@uv run $(PYTHON) -m src index $(RAW) --max-chunk-size $(MAX_CHUNK_SIZE) --method $(METHOD)
 
 retrieve: check-q
-	@uv run $(PYTHON) -m src retrieve "$(Q)" -k $(K) --method $(METHOD) --reranker $(RERANKER)
+	@uv run $(PYTHON) -m src retrieve "$(Q)" -k $(K) --method $(METHOD) --reranker $(RERANKER) --rewrite $(REWRITE)
 
 answer: check-q
-	@uv run $(PYTHON) -m src answer "$(Q)" -k $(K) --keep $(KEEP) --method $(METHOD) --reranker $(RERANKER)
+	@uv run $(PYTHON) -m src answer "$(Q)" -k $(K) --keep $(KEEP) --method $(METHOD) --reranker $(RERANKER) --rewrite $(REWRITE)
 
 search-dataset:
 	$(call require,DATASET_PATH)
 	$(call require,SAVE_DIRECTORY)
-	@uv run $(PYTHON) -m src search_dataset $(DATASET_PATH) $(SAVE_DIRECTORY) --k $(K) --method $(METHOD) --reranker $(RERANKER)
+	@uv run $(PYTHON) -m src search_dataset $(DATASET_PATH) $(SAVE_DIRECTORY) --k $(K) --method $(METHOD) --reranker $(RERANKER) --rewrite $(REWRITE)
 
 answer-dataset:
 	$(call require,STUDENT_SEARCH_RESULTS_PATH)
