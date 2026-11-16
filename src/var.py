@@ -40,6 +40,29 @@ QDRANT_HYBRID_COLLECTION = os.environ.get(
 )
 RERANK_CANDIDATES = int(os.environ.get("RERANK_CANDIDATES", 50))
 RERANKER_MODEL = os.environ.get("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
+# --llm vllm (default): OpenAI-compatible vLLM; ollama: Ollama + fastembed
+LLM_BACKENDS = ("vllm", "ollama")
+VLLM_API_KEY = os.environ.get("VLLM_API_KEY", "EMPTY")
+VLLM_LLM_URL = os.environ.get("VLLM_LLM_URL", "http://localhost:8000/v1")
+VLLM_LLM_MODEL = os.environ.get("VLLM_LLM_MODEL", "Qwen/Qwen3-8B-AWQ")
+VLLM_EMBED_URL = os.environ.get("VLLM_EMBED_URL", "http://localhost:8001/v1")
+VLLM_EMBED_MODEL = os.environ.get("VLLM_EMBED_MODEL", "BAAI/bge-m3")
+VLLM_RERANK_URL = os.environ.get("VLLM_RERANK_URL", "http://localhost:8002")
+VLLM_RERANK_MODEL = os.environ.get(
+    "VLLM_RERANK_MODEL", "BAAI/bge-reranker-v2-m3"
+)
+
+
+def llm_backend() -> str:
+    """Current backend, read at call time (``CLI --llm`` sets the env)."""
+    backend = os.environ.get("LLM_BACKEND", "vllm").lower()
+    if backend not in LLM_BACKENDS:
+        raise ValueError(
+            f"--llm must be one of {LLM_BACKENDS}, got {backend!r}"
+        )
+    return backend
+
+
 # None -> OllamaLLM falls back to OLLAMA_MODEL
 REWRITE_MODEL = os.environ.get("REWRITE_MODEL")
 REWRITE_KEYWORDS_SYSTEM = (

@@ -4,12 +4,12 @@ from typing import List
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import ResponseHandlingException
 
-from src.retrievers.embedding.indexing import embed
+from src.retrievers.embedding.indexing import embed, embed_target
 from src.retrievers.rerank import rerank
 from src.retrievers.rewrite import reformulated_query
 from src.validators import MinimalSource
 from src.var import (
-    EMBED_HOST, EMBED_MODEL, QDRANT_COLLECTION, QDRANT_URL, RERANK_CANDIDATES
+    QDRANT_COLLECTION, QDRANT_URL, RERANK_CANDIDATES
 )
 
 
@@ -35,7 +35,7 @@ def retrieve(
         search_query = reformulated_query(query)
         print(f"rewrite (dense): {search_query}")
 
-    print(f"embedding: calling {EMBED_MODEL} on {EMBED_HOST}")
+    print(f"embedding: calling {embed_target()}")
     vector = embed([search_query])[0]
     limit = max(k, RERANK_CANDIDATES) if reranker else k
     print(f"qdrant: semantic search on {QDRANT_URL} "

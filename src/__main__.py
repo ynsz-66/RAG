@@ -1,6 +1,6 @@
 import fire  # type: ignore
 
-from src.ollama_llm import OllamaLLM
+from src.openai_llm import get_llm
 import json
 import os
 from functools import partial
@@ -8,7 +8,7 @@ from typing import List
 
 from src.retrievers import get_indexer, get_retriever
 from src.retrievers.bm25.retrieve import load_index, query_index
-from src.var import SYSTEM
+from src.var import SYSTEM, llm_backend
 from src.validators import (
     AnsweredQuestion,
     MinimalAnswer,
@@ -27,7 +27,14 @@ class CLI:
     """Local RAG: index a corpus, retrieve sources, answer questions.
 
     --method: bm25 (default) | embedding | hybrid
+    --llm: vllm (default, env LLM_BACKEND) | ollama — backend for the
+        rewrite/answer LLM, the embeddings and the reranker
     """
+
+    def __init__(self, llm: str | None = None) -> None:
+        if llm is not None:
+            os.environ["LLM_BACKEND"] = str(llm)
+        print(f"backend: {llm_backend()}")
 
     def index(
         self,
@@ -66,7 +73,7 @@ class CLI:
         context = "\n\n".join(source.content for source in sources)
         prompt = f"Sources:\n{context}\n\nQuestion: {query}"
         print("answering...")
-        for delta in OllamaLLM().chat_stream(SYSTEM, prompt, MAX_TOKENS):
+        for delta in get_llm().chat_stream(SYSTEM, prompt, MAX_TOKENS):
             print(delta, end="", flush=True)
         print()
 
@@ -93,7 +100,7 @@ class CLI:
                 f"{student_search_results_path} not found: "
                 "run `search_dataset` first."
             )
-        llm = OllamaLLM()
+        llm = get_llm()
         answers: List[MinimalAnswer] = []
         for i, res in enumerate(searched.search_results, 1):
             print(f"[{i}/{len(searched.search_results)}] {res.question_str}")

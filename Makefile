@@ -12,6 +12,7 @@ OLLAMA_LOG      = .ollama.log
 QDRANT_STORAGE  = qdrant_storage/
 
 METHOD   = bm25
+LLM      = $(or $(LLM_BACKEND),vllm)
 RERANKER = False
 REWRITE  = False
 K        = 10
@@ -65,6 +66,7 @@ help:
 	@printf "\n$(BOLD)Overridable variables$(RESET)\n"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "RAW"            "$(RAW)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "METHOD"         "$(METHOD)"
+	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "LLM"            "$(LLM) (vllm | ollama)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "K"              "$(K)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "RERANKER"       "$(RERANKER)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "REWRITE"        "$(REWRITE)"
@@ -132,23 +134,23 @@ check-q:
 	@test -n "$(Q)" || { printf "$(RED)Usage: make $(MAKECMDGOALS) Q=\"your question\"$(RESET)\n"; exit 1; }
 
 index:
-	@uv run $(PYTHON) -m src index $(RAW) --max-chunk-size $(MAX_CHUNK_SIZE) --method $(METHOD)
+	@uv run $(PYTHON) -m src index $(RAW) --max-chunk-size $(MAX_CHUNK_SIZE) --method $(METHOD) --llm $(LLM)
 
 retrieve: check-q
-	@uv run $(PYTHON) -m src retrieve "$(Q)" -k $(K) --method $(METHOD) --reranker $(RERANKER) --rewrite $(REWRITE)
+	@uv run $(PYTHON) -m src retrieve "$(Q)" -k $(K) --method $(METHOD) --reranker $(RERANKER) --rewrite $(REWRITE) --llm $(LLM)
 
 answer: check-q
-	@uv run $(PYTHON) -m src answer "$(Q)" -k $(K) --keep $(KEEP) --method $(METHOD) --reranker $(RERANKER) --rewrite $(REWRITE)
+	@uv run $(PYTHON) -m src answer "$(Q)" -k $(K) --keep $(KEEP) --method $(METHOD) --reranker $(RERANKER) --rewrite $(REWRITE) --llm $(LLM)
 
 search-dataset:
 	$(call require,DATASET_PATH)
 	$(call require,SAVE_DIRECTORY)
-	@uv run $(PYTHON) -m src search_dataset $(DATASET_PATH) $(SAVE_DIRECTORY) --k $(K) --method $(METHOD) --reranker $(RERANKER) --rewrite $(REWRITE)
+	@uv run $(PYTHON) -m src search_dataset $(DATASET_PATH) $(SAVE_DIRECTORY) --k $(K) --method $(METHOD) --reranker $(RERANKER) --rewrite $(REWRITE) --llm $(LLM)
 
 answer-dataset:
 	$(call require,STUDENT_SEARCH_RESULTS_PATH)
 	$(call require,SAVE_DIRECTORY)
-	@uv run $(PYTHON) -m src answer_dataset $(STUDENT_SEARCH_RESULTS_PATH) $(SAVE_DIRECTORY) --keep $(KEEP)
+	@uv run $(PYTHON) -m src answer_dataset $(STUDENT_SEARCH_RESULTS_PATH) $(SAVE_DIRECTORY) --keep $(KEEP) --llm $(LLM)
 
 evaluate:
 	$(call require,STUDENT_ANSWER_PATH)
