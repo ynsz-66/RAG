@@ -1,0 +1,404 @@
+{
+  "rag_questions": [
+    {
+      "question_id": "17526382-7764-4120-b5e8-2d3726b8a4da",
+      "question": "how do I plug in a new fine-tuned add-on while the server is already up and running?"
+    },
+    {
+      "question_id": "cc83c230-099f-4c11-aeab-8c09715c5942",
+      "question": "whats the command to check my compressed model still scores ok on a math benchmark"
+    },
+    {
+      "question_id": "5ea5c01a-c953-4477-ae3a-978e20bd73b8",
+      "question": "how do i turn my prompts into vectors with the offline python thing"
+    },
+    {
+      "question_id": "7c43f334-9999-42b3-935f-11320dc75270",
+      "question": "what kind of chips can i run this on"
+    },
+    {
+      "question_id": "81e37f26-1203-40ad-a848-764d187d083f",
+      "question": "when calling the huggingface preprocessor for images and stuff, whats the difference between the extra args that go to the whole processor and the ones that only go to the tokenizer part?"
+    },
+    {
+      "question_id": "716dd176-b2d7-4613-825a-4ac84b01aab7",
+      "question": "where are the docs about text generating models"
+    },
+    {
+      "question_id": "29a0969f-e8f1-44ee-ada8-3824a1f62360",
+      "question": "how many slots does one picture take up in the prompt, like whats the math behind it"
+    },
+    {
+      "question_id": "5fcddb53-d6d0-4ef2-a4bf-b69790561af2",
+      "question": "how do you spread those models with lots of expert sub-networks across a ton of gpus for big deployments"
+    },
+    {
+      "question_id": "07f706fd-0dcc-4a56-a5ac-cd94ad1c8185",
+      "question": "i get different outputs every run, how do i make it give the same result each time"
+    },
+    {
+      "question_id": "2afc1d73-f2a8-410f-ac60-e7721be5094b",
+      "question": "install guide for google's ai chips?"
+    },
+    {
+      "question_id": "b336583e-9dcd-44cc-aa87-a2337f0f2d7d",
+      "question": "what setting gets chosen depending on the compression scheme so the dense layers can work with shrunk weights"
+    },
+    {
+      "question_id": "452261bc-6ce4-469e-a9b2-fcddbe26b944",
+      "question": "whats the big settings object that gets handed down through all the classes"
+    },
+    {
+      "question_id": "48c25d8b-d2f1-4c65-ace8-fcf586a38afb",
+      "question": "how do i make a docker image for ibm mainframe cpus and run it"
+    },
+    {
+      "question_id": "4d0f06a5-e010-4b6a-bc27-35d2c75eb39f",
+      "question": "what base thing does my model class need to extend if it also takes images"
+    },
+    {
+      "question_id": "d7e28c25-761b-48a0-ade1-a5e459999fe2",
+      "question": "in the low level gpu attention kernel, what goes into the scores array while its finding the max of query times key"
+    },
+    {
+      "question_id": "65078294-e236-4983-b9be-068e8816d9df",
+      "question": "how do i load a model compressed with that third party 4bit toolkit from python code"
+    },
+    {
+      "question_id": "a3ee1a66-4718-4f65-a9d9-ca12cc4c876d",
+      "question": "can i force which attention implementation it uses"
+    },
+    {
+      "question_id": "54131f31-356c-476c-a227-ecab17e95978",
+      "question": "when it autotunes matmuls during compile, which kernel came out fastest for the 8x2048 times 2048x3072 case"
+    },
+    {
+      "question_id": "598c5d47-56a5-4cc6-8c01-fab2b02c221d",
+      "question": "how do i give it a sound clip as input"
+    },
+    {
+      "question_id": "f17a76af-6ca5-4fee-b80f-8f969e6c2585",
+      "question": "what does the cluster-based serving framework integration give you for deploying llms"
+    },
+    {
+      "question_id": "a4aa0cc8-ab95-4c66-af21-77bb9774e4b7",
+      "question": "how do i look at the results after profiling with nvidia's systems profiler"
+    },
+    {
+      "question_id": "90939e22-7490-40f0-9cad-3cd8173a6c95",
+      "question": "what do i put for the compression option when loading a model quantized with amd's tool"
+    },
+    {
+      "question_id": "74de08d1-3bf7-43de-a74c-1eac844bc063",
+      "question": "how to get the fast direct gpu-to-network thing working inside docker"
+    },
+    {
+      "question_id": "d1501d52-b446-4c93-b66e-bea705efbe94",
+      "question": "which git commit do i checkout for the fast attention kernel build on amd cards"
+    },
+    {
+      "question_id": "251e3c3f-d368-4e71-85dd-c20013fedebd",
+      "question": "what are extensions for? can i add my own stuff without touching the source code"
+    },
+    {
+      "question_id": "d56e34ca-85e9-4199-b4b7-24f6440318f5",
+      "question": "how do i know if my model just works out of the box or not"
+    },
+    {
+      "question_id": "4bf223ec-d359-4252-8930-a65db8afcfd1",
+      "question": "which engines can force the model output to follow a json format"
+    },
+    {
+      "question_id": "44c05b2c-beec-474d-ad77-8321c26a29a9",
+      "question": "what cuda compiler version do i need to build the scaled matmul kernels for nvidia's newest gpu generation"
+    },
+    {
+      "question_id": "8b40c55a-1e2e-4865-834b-167932a5097f",
+      "question": "which tool should i use to set up the python env before installing"
+    },
+    {
+      "question_id": "22777170-ee96-4628-89f2-2c0e94fd7f20",
+      "question": "what option do i need when serving that qwen based visual document retrieval model"
+    },
+    {
+      "question_id": "87790ff0-09f3-4aa6-8f8e-83180ded4c40",
+      "question": "minimum version of the 4bit/8bit quantization library?"
+    },
+    {
+      "question_id": "31c0d1fa-b91b-4b9e-b616-19476a4485b0",
+      "question": "my model code has to work on both older and newer releases, how do i do that"
+    },
+    {
+      "question_id": "2d8e04da-8f89-4654-bc2d-118a3aa3512e",
+      "question": "why did they break the expert layer kernels into pluggable pieces"
+    },
+    {
+      "question_id": "8e131a8f-7466-42a7-bd76-a1bb5f32f988",
+      "question": "with block size 16, vector size 8, head size 128 and 32 threads, how many loops does it take to go through the value block"
+    },
+    {
+      "question_id": "2fca0ee8-4ffa-4d5a-a15d-cce139f08f38",
+      "question": "where do i get the monitoring numbers from the running server"
+    },
+    {
+      "question_id": "2a165588-2d3d-4d50-9516-0efa08fd7900",
+      "question": "build from source for amazon's inference chips"
+    },
+    {
+      "question_id": "3aff1593-e6cf-45ab-8cba-8858d3f98b06",
+      "question": "why would you split processing the prompt and generating tokens onto separate instances"
+    },
+    {
+      "question_id": "b8006621-c08c-4ada-a80b-586fc3e5b4e9",
+      "question": "multi node setup is broken where do i look for help"
+    },
+    {
+      "question_id": "5c579258-59df-4bc6-af98-2a13f57d7b70",
+      "question": "how do i set adapters that kick in automatically per input type, like for audio, when starting the server"
+    },
+    {
+      "question_id": "10f95271-664c-4fc9-b63c-bbb17fe10150",
+      "question": "for thinking models how do i get the thinking part pulled out separately, what do i pass at startup"
+    },
+    {
+      "question_id": "e3f2374c-9598-469e-bdae-a2f0962044e2",
+      "question": "the setup where prompt processing runs on a different instance than generation, what are its 3 core pieces"
+    },
+    {
+      "question_id": "1b303f73-8827-4c31-9d6e-3b1324c7b6ce",
+      "question": "which architecture covers meta's llama family and does it work split across several gpus"
+    },
+    {
+      "question_id": "860c7aac-6520-413c-ac98-19448b34472a",
+      "question": "which function do i override to say how many images or videos max per prompt my model accepts"
+    },
+    {
+      "question_id": "2a297df9-dacc-442c-899b-6416078fb451",
+      "question": "what do i need to run on intel's ai accelerator cards, like os and software versions"
+    },
+    {
+      "question_id": "67d28a0f-661d-4707-8982-0fa4162b1081",
+      "question": "can it just load a huggingface model automatically without me porting the code?"
+    },
+    {
+      "question_id": "43914555-ab14-430a-8092-544eba3a30fd",
+      "question": "any videos or guides for contributors working on the guess-ahead decoding stuff"
+    },
+    {
+      "question_id": "a8e7dbd2-458e-428b-a969-cc5e22ce999b",
+      "question": "which old releases had that messaging library bug that makes it freeze"
+    },
+    {
+      "question_id": "cd5e1f0b-1053-4bc0-b4d8-84e003834785",
+      "question": "how do i pip install a build for a different cuda version"
+    },
+    {
+      "question_id": "8447d11b-fb89-4c9c-a8d9-6251ab28c7f6",
+      "question": "on intel accelerator cards which compression methods work and which dont"
+    },
+    {
+      "question_id": "7f0cb10b-945c-482b-9ba7-100c39d9c64b",
+      "question": "how do i remove the deployment i installed with the kubernetes package manager"
+    },
+    {
+      "question_id": "5e2555d2-a1a6-4402-ac72-4e7f46378439",
+      "question": "what are the main ways ppl use this thing"
+    },
+    {
+      "question_id": "f91d4c7f-8bda-4cdf-8613-fc746027dadd",
+      "question": "start a server for a model that understands speech"
+    },
+    {
+      "question_id": "070dd694-1d93-473d-8d04-3ac50689b023",
+      "question": "i want to add support for a new thinking model, where do i start"
+    },
+    {
+      "question_id": "85e0249b-06ff-4e2a-a0fc-336dc1cbe5f8",
+      "question": "what shape should the image features be when my model returns them"
+    },
+    {
+      "question_id": "bfd2db0e-020b-4efc-994a-8692df116cd7",
+      "question": "which server apis line up with the offline generate and chat calls"
+    },
+    {
+      "question_id": "0593b68b-2f74-440e-9d31-f09f06f09bb1",
+      "question": "what are the 3 ways to write my own cache transfer plugin for the split prompt/generation setup"
+    },
+    {
+      "question_id": "5521313f-eae6-431d-9ff4-f3cc31698bfa",
+      "question": "weird compile errors after switching branches, what do i do"
+    },
+    {
+      "question_id": "66bcc3cc-043c-4705-9f54-0bd98185e403",
+      "question": "how do i measure how much quality i lost after compressing a model"
+    },
+    {
+      "question_id": "359b6c20-fa53-4cc3-871d-2d42e9001c3f",
+      "question": "found a vulnerablity, where do i report it"
+    },
+    {
+      "question_id": "bfdddb92-dfbf-4ef6-9867-2f0919e75505",
+      "question": "what does my model need to be compatible"
+    },
+    {
+      "question_id": "b4fb8f6b-b613-46fa-a0aa-aebcf9ed2b14",
+      "question": "how much sample data should i start with when compressing to 4 bits"
+    },
+    {
+      "question_id": "9423895e-b4b2-4844-ba61-c818f2c48f27",
+      "question": "what function calling format works with meta's 3.1 and 3.2 models"
+    },
+    {
+      "question_id": "2cfb7657-3bdf-4e81-bfe4-f0dfb8f557f6",
+      "question": "4 bit quant prep, how many samples should i feed it"
+    },
+    {
+      "question_id": "7ddc938a-4b0c-4e26-86e9-666e0ab68c28",
+      "question": "cuda compiler version needed to build the mixed precision gemm kernels"
+    },
+    {
+      "question_id": "efa50722-19a6-44a2-ab89-e554eb436899",
+      "question": "which architecture handles openai's old 2019 text model"
+    },
+    {
+      "question_id": "16cc036e-cfe4-46c7-8f1b-58402f6e4fdb",
+      "question": "my model takes video but i dont need it, can i turn that input type off completly"
+    },
+    {
+      "question_id": "0f5d97bf-9666-4550-ac80-1e88084214dc",
+      "question": "when benchmarking an 8 bit float model, what extra arg do i need so the scores arent off"
+    },
+    {
+      "question_id": "3620bb65-9be5-4959-88b6-74552f6e3be2",
+      "question": "my custom huggingface model, what does it need to work with the automatic fallback loader"
+    },
+    {
+      "question_id": "54e177d5-9249-4653-b6ea-175de7f7411f",
+      "question": "does it split and compress the weights while loading or after"
+    },
+    {
+      "question_id": "cc3dcf4f-5155-4592-91eb-76ddb4e738b1",
+      "question": "how do i compile my own installable package from source for nvidia gpus"
+    },
+    {
+      "question_id": "99f0b809-1905-4f24-82e6-fa7c7866418d",
+      "question": "which models do they benchmark end to end before every release"
+    },
+    {
+      "question_id": "30266ac7-6f42-4e3f-9bce-30219ee46f93",
+      "question": "whats the oldest nvidia card that can do 4 bit integer math"
+    },
+    {
+      "question_id": "d8a776b1-adb4-428b-8e81-306998a43554",
+      "question": "which version do i need for the direct gpu-to-gpu cache transfer connector"
+    },
+    {
+      "question_id": "3f4ce35c-5c00-4b7f-8781-d292056ba4fb",
+      "question": "can one server host two models on the same port"
+    },
+    {
+      "question_id": "5a5189ea-56a8-40ea-a338-94322a242135",
+      "question": "how do i run several copies of the model across gpus to handle more requests"
+    },
+    {
+      "question_id": "d5df4835-9245-47ba-b9c5-28e690f70c85",
+      "question": "which gpu architectures do the 4bit expert-layer kernels get built for"
+    },
+    {
+      "question_id": "626fea67-be37-41c7-b801-ff643ca89b8c",
+      "question": "which setup/teardown piece is used for the expert layers when experts arent spread across gpus"
+    },
+    {
+      "question_id": "d0853e7c-86df-4b77-85d6-206d49f713a5",
+      "question": "how should i privately tell them about a security hole"
+    },
+    {
+      "question_id": "9f727ae2-eb97-4224-bc71-676e52769bb9",
+      "question": "what are the 3 communication options when splitting experts over gpus"
+    },
+    {
+      "question_id": "de8f43f8-80fa-4a17-9fdf-b00040702df8",
+      "question": "what do the check mark, construction and warning icons mean in the model table"
+    },
+    {
+      "question_id": "50a943ce-91e1-47d4-8d8d-ddb218f7d730",
+      "question": "on arm processors which number formats work"
+    },
+    {
+      "question_id": "3ea21165-0dc8-460f-9353-35c42abc69f1",
+      "question": "for the classification api can i send a list or only one string"
+    },
+    {
+      "question_id": "4f575a44-7098-49ff-81ee-f925c13f956e",
+      "question": "whats the catch with using those small feed-forward draft heads to speed up decoding"
+    },
+    {
+      "question_id": "8ef264c6-cab8-4326-920b-262901ad76e8",
+      "question": "how do i reach the routing service from my machine on k8s"
+    },
+    {
+      "question_id": "1c8c4c31-340c-413e-a6eb-7010f2c10e8b",
+      "question": "which models can i use with fine-tuned adapters"
+    },
+    {
+      "question_id": "a8d3991a-90f0-4dfc-a227-b2ef35c1db41",
+      "question": "wheres the list of settings for the kubernetes chart"
+    },
+    {
+      "question_id": "3e7873ce-9d83-4d41-876d-6bb8bde7cb34",
+      "question": "can i run compressed models on cpu only, which kinds work"
+    },
+    {
+      "question_id": "de2f7646-a182-4d9b-8fb0-b9edf7ce47e9",
+      "question": "whats that training from human preferences thing"
+    },
+    {
+      "question_id": "451afbac-b40a-474f-880e-2bb73bd4ce8c",
+      "question": "that helper from a model's utils package that preprocesses vision inputs, which models is it for"
+    },
+    {
+      "question_id": "8e937b74-eb3a-4942-8e21-5a1159a1f175",
+      "question": "which apis does the openai-style server support"
+    },
+    {
+      "question_id": "9dc7f06a-bff9-403c-91d3-10c07b370096",
+      "question": "full example of forcing json output when using the server?"
+    },
+    {
+      "question_id": "d30ed96e-b7a7-4700-8bf5-d1f162ff3f5c",
+      "question": "how do i serve that multimodal reranking model"
+    },
+    {
+      "question_id": "26a726a8-e47e-4933-9563-8b888a485464",
+      "question": "which generations of google's cloud ai chips work"
+    },
+    {
+      "question_id": "becefabd-1c2a-4257-b14c-78733bb1407f",
+      "question": "i have 2 machines with 8 gpus each, how should i split the model across them"
+    },
+    {
+      "question_id": "32302028-1ea8-40ae-87d6-db98e83f7e49",
+      "question": "compiling eats all my ram and freezes the machine, how do i limit it"
+    },
+    {
+      "question_id": "dab5d35d-02a9-4ef3-a604-2ef45c2327c2",
+      "question": "with the openai python client and a schema class, where do i get the parsed object back"
+    },
+    {
+      "question_id": "0489281a-086d-4851-92ba-c593525fbe36",
+      "question": "what do i need to turn on so the model can call tools by itself"
+    },
+    {
+      "question_id": "b5191cd4-9b74-4211-9e60-6272498deae3",
+      "question": "how do i wrap my conversation into the prompt format the model expects when running offline"
+    },
+    {
+      "question_id": "db4f05fe-78bf-402f-b02f-630d0a3959c3",
+      "question": "first step when adding a new model architecture?"
+    },
+    {
+      "question_id": "4e658668-9e1d-4068-ae99-1f77bab83523",
+      "question": "what do i pass so that image+text embedding model runs as embeddings and not text generation"
+    }
+  ]
+}

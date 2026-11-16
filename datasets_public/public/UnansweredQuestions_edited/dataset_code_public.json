@@ -1,0 +1,16 @@
+{
+  "rag_questions": [
+    {
+      "question_id": "189c8b8a-e59c-4fca-92ad-c02df42cbe40",
+      "question": "what shape does the output come in for the batched experts layer?"
+    },
+    {
+      "question_id": "02789461-05fd-435d-9673-91606102d6c9",
+      "question": "what are the lowest and highest numbers for the small float type in the triton attention kernel?"
+    },
+    {
+      "question_id": "e852801e-b909-4360-82ea-cedb2a1be919",
+      "question": "when does the sampler give back python objects and when does it wait for later?"
+    }
+  ]
+}
