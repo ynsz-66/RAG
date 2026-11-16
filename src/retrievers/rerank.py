@@ -4,7 +4,7 @@ from typing import List
 from fastembed.rerank.cross_encoder import TextCrossEncoder
 
 from src.validators import MinimalSource
-from src.var import RERANKER_MODEL
+from src.var import RERANK_CANDIDATES, RERANKER_MODEL
 
 
 @lru_cache(maxsize=1)
@@ -20,6 +20,8 @@ def rerank(
     """Score (query, chunk) pairs with the cross-encoder, keep top-``k``."""
     if not sources:
         return []
+    print(f"reranker: calling {RERANKER_MODEL} on {len(sources)} "
+          f"candidates (RERANK_CANDIDATES={RERANK_CANDIDATES}) -> top {k}")
     texts = [f"{s.file_path}\n{s.content}" for s in sources]
     scores = get_reranker().rerank(query, texts)
     ranked = sorted(

@@ -36,13 +36,14 @@ def run_indexing(
     if not chunks:
         return []
 
-    print(f"Embedding {len(chunks)} chunks with {EMBED_MODEL}...")
+    print(f"Embedding {len(chunks)} chunks with {EMBED_MODEL} "
+          f"on {EMBED_HOST}...")
     vectors: List[List[float]] = []
     for i in tqdm(range(0, len(chunks), BATCH_SIZE), unit="batch"):
         batch = chunks[i:i + BATCH_SIZE]
         vectors.extend(embed([c.content for c in batch]))
 
-    print("Saving to Qdrant...")
+    print(f"Saving to Qdrant at {QDRANT_URL} (collection {collection})...")
     client = QdrantClient(url=QDRANT_URL, timeout=60)
     # full re-index: drop stale chunks from a previous run
     if client.collection_exists(collection):
