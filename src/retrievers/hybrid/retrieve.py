@@ -2,6 +2,7 @@ import time
 from typing import List
 
 from qdrant_client import QdrantClient, models
+from qdrant_client.http.exceptions import ResponseHandlingException
 
 from src.retrievers.embedding.indexing import embed
 from src.retrievers.hybrid.indexing import TEXT_FIELD
@@ -12,16 +13,24 @@ from src.var import QDRANT_HYBRID_COLLECTION, QDRANT_URL, RERANK_CANDIDATES
 PREFETCH_LIMIT = 100
 
 
-def retrieve(query: str, k: int = 10) -> List[MinimalSource]:
-    """Fuse dense and BM25 with RRF, rerank candidates, return top-``k``."""
+def retrieve(
+    query: str, k: int = 10, reranker: bool = False
+) -> List[MinimalSource]:
+    """Fuse dense and BM25 with RRF, return top-``k``, reranked if asked."""
     start_time = time.time()
     client = QdrantClient(url=QDRANT_URL)
-    if not client.collection_exists(QDRANT_HYBRID_COLLECTION):
+    try:
+        exists = client.collection_exists(QDRANT_HYBRID_COLLECTION)
+    except ResponseHandlingException:
+        raise ConnectionError(
+            f"Qdrant unreachable at {QDRANT_URL}: run `make up` first"
+        ) from None
+    if not exists:
         raise FileNotFoundError(
             "Qdrant hybrid collection not found: index the corpus first"
         )
 
-    candidates = max(k, RERANK_CANDIDATES)
+    candidates = max(k, RERANK_CANDIDATES) if reranker else k
     hits = client.query_points(
         QDRANT_HYBRID_COLLECTION,
         prefetch=[
@@ -45,6 +54,6 @@ def retrieve(query: str, k: int = 10) -> List[MinimalSource]:
         for hit in hits
         if hit.payload is not None
     ]
-    top = rerank(query, sources, k)
+    top = rerank(query, sources, k) if reranker else sources
     print(f"time = {time.time() - start_time:.2f} seconds")
     return top

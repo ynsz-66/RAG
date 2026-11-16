@@ -11,10 +11,11 @@ MAX_CHUNK_SIZE  = 2000
 OLLAMA_LOG      = .ollama.log
 QDRANT_STORAGE  = qdrant_storage/
 
-METHOD  = bm25
-K       = 10
-KEEP    = 3
-Q       =
+METHOD   = bm25
+RERANKER = False
+K        = 10
+KEEP     = 3
+Q        =
 
 DATASET_PATH                =
 SAVE_DIRECTORY              =
@@ -64,6 +65,7 @@ help:
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "RAW"            "$(RAW)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "METHOD"         "$(METHOD)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "K"              "$(K)"
+	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "RERANKER"       "$(RERANKER)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "KEEP"           "$(KEEP)"
 	@printf "  $(YELLOW)%-16s$(RESET) %s\n" "MAX_CHUNK_SIZE" "$(MAX_CHUNK_SIZE)"
 	@printf "\n$(BOLD)Example$(RESET)\n"
@@ -131,15 +133,15 @@ index:
 	@uv run $(PYTHON) -m src index $(RAW) --max-chunk-size $(MAX_CHUNK_SIZE) --method $(METHOD)
 
 retrieve: check-q
-	@uv run $(PYTHON) -m src retrieve "$(Q)" -k $(K) --method $(METHOD)
+	@uv run $(PYTHON) -m src retrieve "$(Q)" -k $(K) --method $(METHOD) --reranker $(RERANKER)
 
 answer: check-q
-	@uv run $(PYTHON) -m src answer "$(Q)" -k $(K) --keep $(KEEP) --method $(METHOD)
+	@uv run $(PYTHON) -m src answer "$(Q)" -k $(K) --keep $(KEEP) --method $(METHOD) --reranker $(RERANKER)
 
 search-dataset:
 	$(call require,DATASET_PATH)
 	$(call require,SAVE_DIRECTORY)
-	@uv run $(PYTHON) -m src search_dataset $(DATASET_PATH) $(SAVE_DIRECTORY) --k $(K) --method $(METHOD)
+	@uv run $(PYTHON) -m src search_dataset $(DATASET_PATH) $(SAVE_DIRECTORY) --k $(K) --method $(METHOD) --reranker $(RERANKER)
 
 answer-dataset:
 	$(call require,STUDENT_SEARCH_RESULTS_PATH)

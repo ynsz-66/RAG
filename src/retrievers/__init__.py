@@ -11,7 +11,7 @@ from src.validators import Chunk, MinimalSource
 METHODS_NAME = ("bm25", "embedding", "hybrid")
 
 Indexer = Callable[[str, int], List[Chunk]]
-Retriever = Callable[[str, int], List[MinimalSource]]
+Retriever = Callable[[str, int, bool], List[MinimalSource]]
 
 METHODS: Dict[int, Tuple[Indexer, Retriever]] = {
     1: (bm25_index, bm25_retrieve),

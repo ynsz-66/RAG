@@ -39,17 +39,28 @@ class CLI:
         chunks = get_indexer(method)(raw_path, max_chunk_size)
         print(f"{len(chunks)} chunks indexed from {raw_path}")
 
-    def retrieve(self, query: str, k: int = 10, method: str = "bm25") -> None:
+    def retrieve(
+        self,
+        query: str,
+        k: int = 10,
+        method: str = "bm25",
+        reranker: bool = False,
+    ) -> None:
         """Print the top-k sources for a query."""
-        for i, source in enumerate(get_retriever(method)(str(query), k), 1):
+        sources = get_retriever(method)(str(query), k, reranker)
+        for i, source in enumerate(sources, 1):
             print(f"--- [{i}] {source.file_path}\n{source.content}\n")
 
     def answer(
-        self, query: str, k: int = 10, keep: int = 3, method: str = "bm25"
+        self, query: str,
+        k: int = 10,
+        keep: int = 3,
+        method: str = "bm25",
+        reranker: bool = False,
     ) -> None:
         """Stream an LLM answer from the top sources."""
         query = str(query)
-        sources = get_retriever(method)(query, k)[:keep]
+        sources = get_retriever(method)(query, k, reranker)[:keep]
         context = "\n\n".join(source.content for source in sources)
         prompt = f"Sources:\n{context}\n\nQuestion: {query}"
         print("answering...")
@@ -72,8 +83,14 @@ class CLI:
                 be written.
             keep: Number of top sources passed to the LLM as context.
         """
-        with open(student_search_results_path) as f:
-            searched = StudentSearchResults(**json.load(f))
+        try:
+            with open(student_search_results_path) as f:
+                searched = StudentSearchResults(**json.load(f))
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"{student_search_results_path} not found: "
+                "run `search_dataset` first."
+            )
         llm = OllamaLLM()
         answers: List[MinimalAnswer] = []
         for i, res in enumerate(searched.search_results, 1):
@@ -100,6 +117,7 @@ class CLI:
         save_directory: str,
         k: int = 10,
         method: str = "bm25",
+        reranker: bool = False,
     ) -> None:
         """Batch-search a dataset of questions.
 
@@ -108,6 +126,7 @@ class CLI:
             save_directory: Directory in which results will be written.
             k: Number of results to retrieve per question.
             method: Retrieval method (bm25 | embedding | hybrid).
+            reranker: Rerank candidates with the cross-encoder.
         """
         with open(dataset_path) as f:
             dataset = RagDataset(**json.load(f))
@@ -119,7 +138,7 @@ class CLI:
             MinimalSearchResults(
                 question_id=q.question_id,
                 question_str=q.question,
-                retrieved_sources=retrieve(q.question, k),
+                retrieved_sources=retrieve(q.question, k, reranker),
             )
             for q in dataset.rag_questions
         ]

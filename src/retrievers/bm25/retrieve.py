@@ -2,8 +2,15 @@ import json
 from typing import Any, Dict, List, Tuple
 
 import bm25s  # type: ignore[import-untyped]
+from src.retrievers.rerank import rerank
 from src.validators import MinimalSource
-from src.var import INDEX_DIR, CHUNKS_PATH, STEMMER, STOPWORDS_EN_FR
+from src.var import (
+    CHUNKS_PATH,
+    INDEX_DIR,
+    RERANK_CANDIDATES,
+    STEMMER,
+    STOPWORDS_EN_FR,
+)
 
 
 def load_index() -> Tuple[bm25s.BM25, List[Dict[str, Any]]]:
@@ -24,26 +31,31 @@ def query_index(
     chunks_meta: List[Dict[str, Any]],
     query: str,
     k: int = 10,
+    reranker: bool = False,
 ) -> List[MinimalSource]:
-    """Return the top-``k`` sources for ``query`` from a loaded index."""
+    """Return the top-``k`` sources for ``query``, reranked if asked."""
+    candidates = max(k, RERANK_CANDIDATES) if reranker else k
     print("tokenize query...")
     query_tokens = bm25s.tokenize(
         query, stopwords=STOPWORDS_EN_FR, stemmer=STEMMER, show_progress=False
     )
     print("retrieve...")
     results, _ = retriever.retrieve(
-        query_tokens, k=k, show_progress=False
+        query_tokens, k=candidates, show_progress=False
     )
     fields = MinimalSource.model_fields
-    return [
+    sources = [
         MinimalSource(**{
             key: chunks_meta[int(doc_id)][key] for key in fields
         })
         for doc_id in results[0]
     ]
+    return rerank(query, sources, k) if reranker else sources
 
 
-def retrieve(query: str, k: int = 10) -> List[MinimalSource]:
+def retrieve(
+    query: str, k: int = 10, reranker: bool = False
+) -> List[MinimalSource]:
     """Load the index from disk and return the top-``k`` sources."""
     retriever, chunks_meta = load_index()
-    return query_index(retriever, chunks_meta, query, k)
+    return query_index(retriever, chunks_meta, query, k, reranker)
