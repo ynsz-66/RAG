@@ -4,8 +4,6 @@ from typing import Any, Iterator
 import httpx
 import ollama
 
-# ollama raises ConnectionError on blocking calls but lets httpx.ConnectError
-# through when streaming
 UNREACHABLE = (ConnectionError, httpx.ConnectError)
 
 
