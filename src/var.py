@@ -18,12 +18,6 @@ SYSTEM = (
     "'Not found in the sources.' (in the language of the question). "
     "(5) Don't cite sources used."
 )
-TITLE_SYSTEM = (
-    "Summarize the user's prompt as a title of 3 to 4 words maximum. "
-    "Generalize and keep only the keywords. "
-    "Always answer in the same language as the user's prompt. "
-    "Reply with the title only, without quotes or final punctuation."
-)
 STOPWORDS_EN_FR = STOPWORDS_EN + STOPWORDS_FRENCH
 # lowercased: PyStemmer and Qdrant both expect e.g. "english"
 STEMMER_LANG = os.environ.get("BM25_STEMMER_LANG", "english").lower()
@@ -47,6 +41,8 @@ VLLM_LLM_URL = os.environ.get("VLLM_LLM_URL", "http://localhost:8000/v1")
 VLLM_LLM_MODEL = os.environ.get("VLLM_LLM_MODEL", "Qwen/Qwen3-8B-AWQ")
 VLLM_EMBED_URL = os.environ.get("VLLM_EMBED_URL", "http://localhost:8001/v1")
 VLLM_EMBED_MODEL = os.environ.get("VLLM_EMBED_MODEL", "BAAI/bge-m3")
+# query-side instruction (e.g. Qwen3-Embedding); empty = raw query
+EMBED_QUERY_INSTRUCT = os.environ.get("EMBED_QUERY_INSTRUCT", "")
 VLLM_RERANK_URL = os.environ.get("VLLM_RERANK_URL", "http://localhost:8002")
 VLLM_RERANK_MODEL = os.environ.get(
     "VLLM_RERANK_MODEL", "BAAI/bge-reranker-v2-m3"

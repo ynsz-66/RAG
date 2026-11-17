@@ -4,7 +4,7 @@ from typing import List
 from qdrant_client import QdrantClient, models
 from qdrant_client.http.exceptions import ResponseHandlingException
 
-from src.retrievers.embedding.indexing import embed, embed_target
+from src.retrievers.embedding.indexing import embed_query, embed_target
 from src.retrievers.hybrid.indexing import TEXT_FIELD
 from src.retrievers.rerank import rerank
 from src.retrievers.rewrite import keywords_query
@@ -44,7 +44,7 @@ def retrieve(
 
     candidates = max(k, RERANK_CANDIDATES) if reranker else k
     print(f"embedding: calling {embed_target()}")
-    vector = embed([dense_query])[0]
+    vector = embed_query(dense_query)
     print(f"qdrant: hybrid search (dense + BM25, RRF) on {QDRANT_URL} "
           f"(collection {QDRANT_HYBRID_COLLECTION}, limit {candidates})")
     hits = client.query_points(

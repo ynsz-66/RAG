@@ -11,8 +11,8 @@ from tqdm import tqdm  # type: ignore
 from src.chunking import create_chunk
 from src.validators import Chunk
 from src.var import (
-    EMBED_HOST, EMBED_MODEL, QDRANT_COLLECTION, QDRANT_URL, VLLM_API_KEY,
-    VLLM_EMBED_MODEL, VLLM_EMBED_URL, llm_backend,
+    EMBED_HOST, EMBED_MODEL, EMBED_QUERY_INSTRUCT, QDRANT_COLLECTION,
+    QDRANT_URL, VLLM_API_KEY, VLLM_EMBED_MODEL, VLLM_EMBED_URL, llm_backend,
 )
 
 BATCH_SIZE = 32
@@ -45,6 +45,14 @@ def embed(texts: List[str]) -> List[List[float]]:
     response.raise_for_status()
     embeddings: List[List[float]] = response.json()["embeddings"]
     return embeddings
+
+
+def embed_query(query: str) -> List[float]:
+    """Embed a search query, prefixed with the model's instruction if set
+    (documents are embedded raw by ``embed``)."""
+    if EMBED_QUERY_INSTRUCT:
+        query = f"Instruct: {EMBED_QUERY_INSTRUCT}\nQuery: {query}"
+    return embed([query])[0]
 
 
 def run_indexing(
