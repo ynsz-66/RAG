@@ -8,7 +8,6 @@ RAW          = $(VLLM_DIR)/
 
 MAX_CHUNK_SIZE  = 2000
 
-OLLAMA_LOG      = .ollama.log
 QDRANT_STORAGE  = qdrant_storage/
 
 METHOD   = bm25
@@ -36,7 +35,7 @@ BOLD    = \033[1m
 RESET   = \033[0m
 
 .PHONY: all help install lint fetch-vllm \
-	check-ollama up down clean fclean re \
+	up down clean fclean re \
 	index retrieve answer check-q \
 	search-dataset answer-dataset evaluate
 
@@ -48,15 +47,15 @@ help:
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "install"  "Install dependencies via uv"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "fetch-vllm" "Download vLLM v$(VLLM_VERSION) sources into $(VLLM_DIR)"
 	@printf "\n$(BOLD)Services$(RESET)\n"
-	@printf "  $(CYAN)%-12s$(RESET) %s\n" "up"       "Check ollama, start ollama serve + Qdrant container"
+	@printf "  $(CYAN)%-12s$(RESET) %s\n" "up"       "Start the Qdrant container"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "down"     "Stop the Qdrant container"
-	@printf "  $(CYAN)%-12s$(RESET) %s\n" "clean"    "down + stop ollama serve + remove venv, index, caches"
+	@printf "  $(CYAN)%-12s$(RESET) %s\n" "clean"    "down + remove venv and caches"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "fclean"   "clean + delete Qdrant storage"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "re"       "clean + up"
 	@printf "\n$(BOLD)Pipeline$(RESET)\n"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "index"    "Index RAW with METHOD"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "retrieve" "Top-K chunks for Q=\"...\""
-	@printf "  $(CYAN)%-12s$(RESET) %s\n" "answer"   "LLM answer for Q=\"...\" (needs make up)"
+	@printf "  $(CYAN)%-12s$(RESET) %s\n" "answer"   "LLM answer for Q=\"...\""
 	@printf "\n$(BOLD)Evaluation$(RESET)\n"
 	@printf "  $(CYAN)%-16s$(RESET) %s\n" "search-dataset" "Top-K sources per question: DATASET_PATH -> SAVE_DIRECTORY"
 	@printf "  $(CYAN)%-16s$(RESET) %s\n" "answer-dataset" "LLM answers: STUDENT_SEARCH_RESULTS_PATH -> SAVE_DIRECTORY"
@@ -90,17 +89,7 @@ fetch-vllm:
 	fi
 
 
-check-ollama:
-	@command -v ollama >/dev/null 2>&1 || { \
-		printf "$(RED)ollama is not installed: https://ollama.com/download$(RESET)\n"; exit 1; }
-
-up: check-ollama
-	@if curl -sf $(OLLAMA_URL) >/dev/null 2>&1; then \
-		printf "$(GREEN)ollama already running at $(OLLAMA_URL)$(RESET)\n"; \
-	else \
-		printf "$(GREEN)Starting ollama serve (logs: $(OLLAMA_LOG))...$(RESET)\n"; \
-		OLLAMA_HOST=$(OLLAMA_URL) nohup ollama serve > $(OLLAMA_LOG) 2>&1 & \
-	fi
+up:
 	@docker compose up -d
 
 down:
@@ -111,7 +100,6 @@ clean: down
 	@rm -rf ${ENV}
 	@rm -rf .uv_cache
 	@rm -rf .hf_cache
-	@rm -f $(OLLAMA_LOG)
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
