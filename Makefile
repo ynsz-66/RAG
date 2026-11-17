@@ -148,8 +148,8 @@ evaluate:
 
 lint:
 	@echo "$(GREEN)Running linters...$(RESET)"
-	@uv run flake8 --exclude=$(ENV),${UV_CACHE},${RAW},data/ .
-	@uv run mypy . --exclude '$(ENV)|${UV_CACHE}|${RAW},data/' \
+	@uv run flake8 --exclude=$(ENV),data/ .
+	@uv run mypy . --exclude '$(ENV)|data/' \
 		--warn-return-any --ignore-missing-imports \
 		--disallow-untyped-defs --check-untyped-defs
 	@echo "$(GREEN)Lint complete!$(RESET)"

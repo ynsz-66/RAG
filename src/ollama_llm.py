@@ -1,12 +1,14 @@
-import json
 import os
 from typing import Any, Iterator
 
 import httpx
+import ollama
+
+UNREACHABLE = (ConnectionError, httpx.ConnectError)
 
 
 class OllamaLLM:
-    """Chat client for a local Ollama server (native ``/api/chat``).
+    """Chat client for an Ollama server (``ollama`` lib, native ``/api/chat``).
 
     The native endpoint is used because only it honors ``think``.
     """
@@ -26,28 +28,28 @@ class OllamaLLM:
         self.host = host.rstrip("/")
         self.model = model or os.environ.get("OLLAMA_MODEL", "qwen3:8b")
         self.think = think
-        self.temperature = temperature
-        self.repeat_penalty = repeat_penalty
-        self.client = httpx.Client(base_url=self.host, timeout=self.TIMEOUT)
+        self.options: dict[str, Any] = {
+            key: value
+            for key, value in (
+                ("temperature", temperature),
+                ("repeat_penalty", repeat_penalty),
+            )
+            if value is not None
+        }
+        self.client = ollama.Client(host=self.host, timeout=self.TIMEOUT)
 
-    def payload(
-        self, system: str, user: str, max_new_tokens: int, stream: bool
+    def request(
+        self, system: str, user: str, max_new_tokens: int
     ) -> dict[str, Any]:
-        """Build the /api/chat request body."""
-        options: dict[str, Any] = {"num_predict": max_new_tokens}
-        if self.temperature is not None:
-            options["temperature"] = self.temperature
-        if self.repeat_penalty is not None:
-            options["repeat_penalty"] = self.repeat_penalty
+        """Build the keyword arguments for ``ollama.Client.chat``."""
         return {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
-            "stream": stream,
             "think": self.think,
-            "options": options,
+            "options": {**self.options, "num_predict": max_new_tokens},
         }
 
     def unreachable(self, exc: Exception) -> RuntimeError:
@@ -63,33 +65,22 @@ class OllamaLLM:
     ) -> str:
         """Blocking chat completion returning the full answer."""
         try:
-            response = self.client.post(
-                "/api/chat",
-                json=self.payload(system, user, max_new_tokens, False),
+            response = self.client.chat(
+                **self.request(system, user, max_new_tokens)
             )
-        except httpx.ConnectError as exc:
+        except UNREACHABLE as exc:
             raise self.unreachable(exc) from exc
-        response.raise_for_status()
-        message: dict[str, Any] = response.json().get("message", {})
-        return str(message.get("content", ""))
+        return response.message.content or ""
 
     def chat_stream(
         self, system: str, user: str, max_new_tokens: int = 200
     ) -> Iterator[str]:
         """Streaming chat completion yielding token deltas."""
         try:
-            with self.client.stream(
-                "POST",
-                "/api/chat",
-                json=self.payload(system, user, max_new_tokens, True),
-            ) as response:
-                response.raise_for_status()
-                for line in response.iter_lines():
-                    if not line:
-                        continue
-                    chunk = json.loads(line)
-                    delta = chunk.get("message", {}).get("content")
-                    if delta:
-                        yield delta
-        except httpx.ConnectError as exc:
+            for chunk in self.client.chat(
+                **self.request(system, user, max_new_tokens), stream=True
+            ):
+                if chunk.message.content:
+                    yield chunk.message.content
+        except UNREACHABLE as exc:
             raise self.unreachable(exc) from exc
