@@ -39,6 +39,9 @@ ollama pull bge-m3           # embedding model
 
 The reranker runs locally with [fastembed](https://github.com/qdrant/fastembed) and downloads its model on first use.
 
+The models above are only defaults: set any model you have pulled in the variables below
+(any [fastembed](https://qdrant.github.io/fastembed/examples/Supported_Models/) cross-encoder for `RERANKER_MODEL`).
+
 | Variable         | Default                   | Used for                        |
 |------------------|---------------------------|---------------------------------|
 | `OLLAMA_HOST`    | `http://localhost:11434`  | chat (answer, rewrite)          |
@@ -59,6 +62,8 @@ vllm serve BAAI/bge-m3             --port 8001 --api-key <key> --runner pooling 
 vllm serve BAAI/bge-reranker-v2-m3 --port 8002 --api-key <key> --runner pooling   # reranker
 ```
 
+These models are only defaults: serve any model vLLM supports, then set the same name in `VLLM_*_MODEL`
+(it must match the name given to `vllm serve`).
 
 | Variable            | Default                    | Used for                    |
 |---------------------|----------------------------|-----------------------------|
@@ -71,6 +76,8 @@ vllm serve BAAI/bge-reranker-v2-m3 --port 8002 --api-key <key> --runner pooling 
 | `VLLM_RERANK_MODEL` | `BAAI/bge-reranker-v2-m3`  | reranker model              |
 
 Use the machine's address instead of `localhost` if the servers run elsewhere, and always set `--api-key` if they are reachable from the internet.
+
+Changing the embedding model changes the vectors: re-run `make index` for `embedding` / `hybrid`.
 
 ### Other settings
 
