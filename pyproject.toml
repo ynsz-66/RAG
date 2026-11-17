@@ -15,6 +15,7 @@ dependencies = [
   "qdrant-client>=1.20.0",
   "fastembed",
   "openai>=3.51.0",
+  "ollama>=0.6.3",
 ]
 
 [dependency-groups]
