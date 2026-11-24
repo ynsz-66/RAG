@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import List
 
@@ -16,6 +17,8 @@ from src.var import (
 )
 
 PREFETCH_LIMIT = 100
+
+log = logging.getLogger(__name__)
 
 
 def retrieve(
@@ -39,14 +42,14 @@ def retrieve(
     if rewrite:
         dense_query = reformulated_query(query)
         text_query = keywords_query(query)
-        print(f"rewrite (dense): {dense_query}")
-        print(f"rewrite (bm25): {text_query}")
+        log.debug(f"rewrite (dense): {dense_query}")
+        log.debug(f"rewrite (bm25): {text_query}")
 
     candidates = max(k, RERANK_CANDIDATES) if reranker else k
-    print(f"embedding: calling {embed_target()}")
+    log.debug(f"embedding: calling {embed_target()}")
     vector = embed_query(dense_query)
-    print(f"qdrant: hybrid search (dense + BM25, RRF) on {QDRANT_URL} "
-          f"(collection {QDRANT_HYBRID_COLLECTION}, limit {candidates})")
+    log.debug(f"qdrant: hybrid search (dense + BM25, RRF) on {QDRANT_URL} "
+              f"(collection {QDRANT_HYBRID_COLLECTION}, limit {candidates})")
     hits = client.query_points(
         QDRANT_HYBRID_COLLECTION,
         prefetch=[
@@ -72,5 +75,5 @@ def retrieve(
         if hit.payload is not None
     ]
     top = rerank(query, sources, k) if reranker else sources
-    print(f"time = {time.time() - start_time:.2f} seconds")
+    log.debug(f"time = {time.time() - start_time:.2f} seconds")
     return top

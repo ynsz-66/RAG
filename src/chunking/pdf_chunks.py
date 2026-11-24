@@ -1,9 +1,12 @@
+import logging
 import io
 from typing import List, Union
 
 from pypdf import PdfReader
 
 from src.validators import Chunk
+
+log = logging.getLogger(__name__)
 
 
 def extract_text_from_pdf(source: Union[str, bytes]) -> List[str]:
@@ -20,7 +23,7 @@ def extract_text_from_pdf(source: Union[str, bytes]) -> List[str]:
                 pages.append(page_text)
         return pages
     except Exception as e:
-        print(f"Error while reading PDF: {e}")
+        log.warning(f"Error while reading PDF: {e}")
         return []
 
 

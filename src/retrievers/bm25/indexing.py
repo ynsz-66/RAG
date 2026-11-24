@@ -1,3 +1,4 @@
+import logging
 import json
 import os
 from functools import partial
@@ -12,6 +13,8 @@ from src.var import (
     CHUNKS_DIR, CHUNKS_PATH, INDEX_DIR, STEMMER, STOPWORDS_EN_FR
 )
 
+log = logging.getLogger(__name__)
+
 saving_progress_bar.find_newline_positions = partial(
     saving_progress_bar.find_newline_positions, show_progress=False
 )
@@ -21,20 +24,20 @@ def run_indexing(
     raw_path: str,
     max_chunk_size: int = 2000,
 ) -> List[Chunk]:
-    print("Create chunks...")
+    log.info("Create chunks...")
     chunks = create_chunk(raw_path, max_chunk_size=max_chunk_size)
     if not chunks:
         return []
 
     texts = [c.content for c in chunks]
 
-    print("Tokenizing chunks...")
+    log.info("Tokenizing chunks...")
     texts_tokens = bm25s.tokenize(
         texts, stopwords=STOPWORDS_EN_FR, stemmer=STEMMER, show_progress=False
     )
 
     retriever = bm25s.BM25()
-    print("Indexing chunks...")
+    log.info("Indexing chunks...")
     retriever.index(texts_tokens, show_progress=False)
 
     os.makedirs(CHUNKS_DIR, exist_ok=True)
@@ -49,7 +52,7 @@ def run_indexing(
                 "last_character_index": c.last_character_index,
             }) + "\n")
 
-    print("Saving index...")
+    log.info("Saving index...")
     retriever.save(INDEX_DIR)
 
     return chunks

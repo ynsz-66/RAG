@@ -1,14 +1,18 @@
 import fire  # type: ignore
 
+import time
 from src.openai_llm import get_llm
 import json
+import logging
 import os
 from functools import partial
 from typing import List
 
 from src.retrievers import get_indexer, get_retriever
 from src.retrievers.bm25.retrieve import load_index, query_index
-from src.var import SYSTEM, llm_backend
+from src.demo import Retriever, run_demo
+from src.logger import setup_logging
+from src.var import MAX_TOKENS, SYSTEM, answer_prompt, llm_backend
 from src.validators import (
     AnsweredQuestion,
     MinimalAnswer,
@@ -20,7 +24,7 @@ from src.validators import (
 )
 from src.recall import recall_at
 
-MAX_TOKENS = 1024
+log = logging.getLogger("src")
 
 
 class CLI:
@@ -29,12 +33,14 @@ class CLI:
     --method: bm25 (default) | embedding | hybrid
     --llm: vllm (default, env LLM_BACKEND) | ollama — backend for the
         rewrite/answer LLM, the embeddings and the reranker
+    --verbose: show debug logs (rewrite, embedding, reranker, timings)
     """
 
-    def __init__(self, llm: str | None = None) -> None:
+    def __init__(self, llm: str | None = None, verbose: bool = False) -> None:
         if llm is not None:
             os.environ["LLM_BACKEND"] = str(llm)
-        print(f"backend: {llm_backend()}")
+        setup_logging(verbose)
+        log.debug(f"backend: {llm_backend()}")
 
     def index(
         self,
@@ -70,12 +76,22 @@ class CLI:
         """Stream an LLM answer from the top sources."""
         query = str(query)
         sources = get_retriever(method)(query, k, reranker, rewrite)[:keep]
-        context = "\n\n".join(source.content for source in sources)
-        prompt = f"Sources:\n{context}\n\nQuestion: {query}"
-        print("answering...")
+        prompt = answer_prompt(query, [s.content for s in sources])
         for delta in get_llm().chat_stream(SYSTEM, prompt, MAX_TOKENS):
             print(delta, end="", flush=True)
+            time.sleep(1)
         print()
+
+    def demo(
+        self,
+        k: int = 10,
+        keep: int = 3,
+        method: str = "bm25",
+        reranker: bool = False,
+        rewrite: bool = False,
+    ) -> None:
+        """Interactive question → answer loop (no chat history)."""
+        run_demo(loaded_retriever(method), method, k, keep, reranker, rewrite)
 
     def answer_dataset(
         self,
@@ -104,10 +120,10 @@ class CLI:
         answers: List[MinimalAnswer] = []
         for i, res in enumerate(searched.search_results, 1):
             print(f"[{i}/{len(searched.search_results)}] {res.question_str}")
-            context = "\n\n".join(
-                s.content for s in res.retrieved_sources[:keep]
+            prompt = answer_prompt(
+                res.question_str,
+                [s.content for s in res.retrieved_sources[:keep]],
             )
-            prompt = f"Sources:\n{context}\n\nQuestion: {res.question_str}"
             answers.append(MinimalAnswer(
                 **res.model_dump(),
                 answer=llm.chat(SYSTEM, prompt, MAX_TOKENS),
@@ -142,10 +158,7 @@ class CLI:
         """
         with open(dataset_path) as f:
             dataset = RagDataset(**json.load(f))
-        retrieve = (
-            partial(query_index, *load_index())
-            if method == "bm25" else get_retriever(method)
-        )
+        retrieve = loaded_retriever(method)
         results: List[MinimalSearchResults] = []
         total = len(dataset.rag_questions)
         for i, q in enumerate(dataset.rag_questions, 1):
@@ -197,6 +210,13 @@ class CLI:
         except Exception as e:
             print(f"[ERROR] ({e.__class__.__name__}) {e}")
             print()
+
+
+def loaded_retriever(method: str) -> Retriever:
+    """Retriever for ``method``; bm25 loads its index once, up front."""
+    if method == "bm25":
+        return partial(query_index, *load_index())
+    return get_retriever(method)
 
 
 def save_json(data: str, save_directory: str, input_path: str) -> None:

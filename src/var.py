@@ -18,8 +18,16 @@ SYSTEM = (
     "'Not found in the sources.' (in the language of the question). "
     "(5) Don't cite sources used."
 )
+MAX_TOKENS = 1024
+
+
+def answer_prompt(query: str, contents: list[str]) -> str:
+    """User message for the answer LLM: sources, then the question."""
+    context = "\n\n".join(contents)
+    return f"Sources:\n{context}\n\nQuestion: {query}"
+
+
 STOPWORDS_EN_FR = STOPWORDS_EN + STOPWORDS_FRENCH
-# lowercased: PyStemmer and Qdrant both expect e.g. "english"
 STEMMER_LANG = os.environ.get("BM25_STEMMER_LANG", "english").lower()
 STEMMER = Stemmer.Stemmer(STEMMER_LANG)
 INDEX_DIR = os.environ.get("BM25_INDEX_DIR", "data/processed/bm25_index/")

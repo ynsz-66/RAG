@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import List
 
@@ -11,6 +12,8 @@ from src.validators import MinimalSource
 from src.var import (
     QDRANT_COLLECTION, QDRANT_URL, RERANK_CANDIDATES
 )
+
+log = logging.getLogger(__name__)
 
 
 def retrieve(
@@ -33,13 +36,13 @@ def retrieve(
     search_query = query
     if rewrite:
         search_query = reformulated_query(query)
-        print(f"rewrite (dense): {search_query}")
+        log.debug(f"rewrite (dense): {search_query}")
 
-    print(f"embedding: calling {embed_target()}")
+    log.debug(f"embedding: calling {embed_target()}")
     vector = embed_query(search_query)
     limit = max(k, RERANK_CANDIDATES) if reranker else k
-    print(f"qdrant: semantic search on {QDRANT_URL} "
-          f"(collection {QDRANT_COLLECTION}, limit {limit})")
+    log.debug(f"qdrant: semantic search on {QDRANT_URL} "
+              f"(collection {QDRANT_COLLECTION}, limit {limit})")
     hits = client.query_points(
         QDRANT_COLLECTION, query=vector, limit=limit
     ).points
@@ -52,5 +55,5 @@ def retrieve(
         if hit.payload is not None
     ]
     top = rerank(query, sources, k) if reranker else sources
-    print(f"time = {time.time() - start_time:.2f} seconds")
+    log.debug(f"time = {time.time() - start_time:.2f} seconds")
     return top

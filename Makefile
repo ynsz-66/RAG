@@ -14,6 +14,7 @@ METHOD   = bm25
 LLM      = $(or $(LLM_BACKEND),vllm)
 RERANKER = False
 REWRITE  = False
+VERBOSE  = False
 K        = 10
 KEEP     = 3
 Q        =
@@ -36,7 +37,7 @@ RESET   = \033[0m
 
 .PHONY: all help install lint fetch-vllm \
 	up down clean fclean re \
-	index retrieve answer check-q \
+	index retrieve answer demo check-q \
 	search-dataset answer-dataset evaluate
 
 all: help
@@ -56,6 +57,7 @@ help:
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "index"    "Index RAW with METHOD"
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "retrieve" "Top-K chunks for Q=\"...\""
 	@printf "  $(CYAN)%-12s$(RESET) %s\n" "answer"   "LLM answer for Q=\"...\""
+	@printf "  $(CYAN)%-12s$(RESET) %s\n" "demo"     "Interactive question -> answer loop"
 	@printf "\n$(BOLD)Evaluation$(RESET)\n"
 	@printf "  $(CYAN)%-16s$(RESET) %s\n" "search-dataset" "Top-K sources per question: DATASET_PATH -> SAVE_DIRECTORY"
 	@printf "  $(CYAN)%-16s$(RESET) %s\n" "answer-dataset" "LLM answers: STUDENT_SEARCH_RESULTS_PATH -> SAVE_DIRECTORY"
@@ -129,6 +131,9 @@ retrieve: check-q
 
 answer: check-q
 	@uv run $(PYTHON) -m src answer "$(Q)" -k $(K) --keep $(KEEP) --method $(METHOD) --reranker $(RERANKER) --rewrite $(REWRITE) --llm $(LLM)
+
+demo:
+	@uv run $(PYTHON) -m src demo -k $(K) --keep $(KEEP) --method $(METHOD) --reranker $(RERANKER) --rewrite $(REWRITE) --llm $(LLM) --verbose $(VERBOSE)
 
 search-dataset:
 	$(call require,DATASET_PATH)

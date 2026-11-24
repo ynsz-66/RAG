@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from qdrant_client import QdrantClient, models
@@ -9,6 +10,8 @@ from src.var import (
 )
 
 TEXT_FIELD = "content"
+
+log = logging.getLogger(__name__)
 
 
 def run_indexing(
@@ -22,7 +25,7 @@ def run_indexing(
     if not chunks:
         return []
 
-    print("Building Qdrant BM25 text index...")
+    log.info("Building Qdrant BM25 text index...")
     QdrantClient(url=QDRANT_URL, timeout=60).create_payload_index(
         QDRANT_HYBRID_COLLECTION,
         field_name=TEXT_FIELD,

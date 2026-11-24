@@ -1,3 +1,4 @@
+import logging
 import time
 from functools import lru_cache
 from typing import List
@@ -16,6 +17,8 @@ from src.var import (
 )
 
 BATCH_SIZE = 32
+
+log = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
@@ -61,18 +64,18 @@ def run_indexing(
     collection: str = QDRANT_COLLECTION,
 ) -> List[Chunk]:
     start_time = time.time()
-    print("Create chunks...")
+    log.info("Create chunks...")
     chunks = create_chunk(raw_path, max_chunk_size=max_chunk_size)
     if not chunks:
         return []
 
-    print(f"Embedding {len(chunks)} chunks with {embed_target()}...")
+    log.info(f"Embedding {len(chunks)} chunks with {embed_target()}...")
     vectors: List[List[float]] = []
     for i in tqdm(range(0, len(chunks), BATCH_SIZE), unit="batch"):
         batch = chunks[i:i + BATCH_SIZE]
         vectors.extend(embed([c.content for c in batch]))
 
-    print(f"Saving to Qdrant at {QDRANT_URL} (collection {collection})...")
+    log.info(f"Saving to Qdrant at {QDRANT_URL} (collection {collection})...")
     client = QdrantClient(url=QDRANT_URL, timeout=60)
     # full re-index: drop stale chunks from a previous run
     if client.collection_exists(collection):
@@ -91,5 +94,5 @@ def run_indexing(
         ],
         batch_size=256,
     )
-    print(f"time = {time.time() - start_time:.2f} seconds")
+    log.info(f"time = {time.time() - start_time:.2f} seconds")
     return chunks

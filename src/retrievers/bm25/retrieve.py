@@ -1,3 +1,4 @@
+import logging
 import json
 from typing import Any, Dict, List, Tuple
 
@@ -12,6 +13,8 @@ from src.var import (
     STEMMER,
     STOPWORDS_EN_FR,
 )
+
+log = logging.getLogger(__name__)
 
 
 def load_index() -> Tuple[bm25s.BM25, List[Dict[str, Any]]]:
@@ -39,14 +42,14 @@ def query_index(
     search_query = query
     if rewrite:
         search_query = keywords_query(query)
-        print(f"rewrite (bm25): {search_query}")
+        log.debug(f"rewrite (bm25): {search_query}")
     candidates = max(k, RERANK_CANDIDATES) if reranker else k
-    print("tokenize query...")
+    log.debug("tokenize query...")
     query_tokens = bm25s.tokenize(
         search_query, stopwords=STOPWORDS_EN_FR, stemmer=STEMMER,
         show_progress=False,
     )
-    print("retrieve...")
+    log.debug("retrieve...")
     results, _ = retriever.retrieve(
         query_tokens, k=candidates, show_progress=False
     )

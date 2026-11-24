@@ -1,3 +1,4 @@
+import logging
 import re
 from typing import List
 
@@ -10,6 +11,8 @@ from src.var import (
 )
 
 MAX_REWRITE_WORDS = 8
+
+log = logging.getLogger(__name__)
 
 
 def first_line(text: str) -> str:
@@ -37,7 +40,7 @@ def rewrite_llm() -> OpenLLM | OllamaLLM:
     llm = get_llm(
         REWRITE_MODEL, think=False, temperature=0, repeat_penalty=1.3
     )
-    print(f"rewrite: calling {llm.model} on {llm.host}")
+    log.debug(f"rewrite: calling {llm.model} on {llm.host}")
     return llm
 
 

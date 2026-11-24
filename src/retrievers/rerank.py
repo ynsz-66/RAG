@@ -1,3 +1,4 @@
+import logging
 from functools import lru_cache
 from typing import List
 
@@ -10,11 +11,13 @@ from src.var import (
     VLLM_RERANK_URL, llm_backend,
 )
 
+log = logging.getLogger(__name__)
+
 
 @lru_cache(maxsize=1)
 def get_reranker() -> TextCrossEncoder:
     """Load the cross-encoder once, on first use (downloads it if missing)."""
-    print(f"Loading reranker {RERANKER_MODEL}")
+    log.debug(f"Loading reranker {RERANKER_MODEL}")
     return TextCrossEncoder(model_name=RERANKER_MODEL)
 
 
@@ -60,8 +63,8 @@ def rerank(
     vllm = llm_backend() == "vllm"
     target = (f"{VLLM_RERANK_MODEL} on {VLLM_RERANK_URL}" if vllm
               else RERANKER_MODEL)
-    print(f"reranker: calling {target} on {len(sources)} "
-          f"candidates (RERANK_CANDIDATES={RERANK_CANDIDATES}) -> top {k}")
+    log.debug(f"reranker: calling {target} on {len(sources)} "
+              f"candidates (RERANK_CANDIDATES={RERANK_CANDIDATES}) -> top {k}")
     texts = [f"{s.file_path}\n{s.content}" for s in sources]
     scores = (vllm_scores(query, texts) if vllm
               else list(get_reranker().rerank(query, texts)))

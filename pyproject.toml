@@ -15,6 +15,7 @@ dependencies = [
   "fastembed",
   "openai>=3.51.0",
   "ollama>=0.6.3",
+  "rich>=13.7",
 ]
 
 [dependency-groups]
