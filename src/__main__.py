@@ -10,7 +10,9 @@ from typing import List
 
 from src.retrievers import get_indexer, get_retriever
 from src.retrievers.bm25.retrieve import load_index, query_index
-from src.demo import Retriever, run_demo
+from rich.console import Console
+
+from src.demo import Retriever, index_ready, not_ready, run_demo
 from src.logger import setup_logging
 from src.var import MAX_TOKENS, SYSTEM, answer_prompt, llm_backend
 from src.validators import (
@@ -91,6 +93,8 @@ class CLI:
         rewrite: bool = False,
     ) -> None:
         """Interactive question → answer loop (no chat history)."""
+        if not index_ready(method):
+            return not_ready(Console(), method)
         run_demo(loaded_retriever(method), method, k, keep, reranker, rewrite)
 
     def answer_dataset(

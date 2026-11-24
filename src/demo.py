@@ -1,7 +1,9 @@
 import readline  # noqa: F401  (line editing + ↑/↓ history for input())
+import os
 from typing import Callable, List
 import time
 
+from qdrant_client import QdrantClient
 from rich.console import Console
 from rich.live import Live
 from rich.markdown import Markdown
@@ -11,7 +13,10 @@ from rich.text import Text
 
 from src.openai_llm import get_llm
 from src.validators import MinimalSource
-from src.var import MAX_TOKENS, SYSTEM, answer_prompt
+from src.var import (
+    CHUNKS_PATH, INDEX_DIR, MAX_TOKENS, QDRANT_COLLECTION,
+    QDRANT_HYBRID_COLLECTION, QDRANT_URL, SYSTEM, answer_prompt,
+)
 
 Retriever = Callable[[str, int, bool, bool], List[MinimalSource]]
 
@@ -37,6 +42,35 @@ def banner(console: Console, method: str, reranker: bool, model: str) -> None:
     for art, side in zip(logo, info):
         console.print(f"[bold cyan]{art:<26}[/]{side}")
     console.print()
+
+
+def index_ready(method: str) -> bool:
+    """True if ``make index`` was run for ``method`` (Qdrant down → False)."""
+    if method == "bm25":
+        return os.path.isdir(INDEX_DIR) and os.path.isfile(CHUNKS_PATH)
+    hybrid = method == "hybrid"
+    name = QDRANT_HYBRID_COLLECTION if hybrid else QDRANT_COLLECTION
+    try:
+        return QdrantClient(url=QDRANT_URL).collection_exists(name)
+    except Exception:
+        return False
+
+
+def not_ready(console: Console, method: str) -> None:
+    """Tell the presenter what to run before ``make demo``."""
+    steps = [
+        ("make fetch-vllm", "download the vLLM docs"),
+        (f"make index METHOD={method}", "build the search index"),
+        (f"make demo METHOD={method}", ""),
+    ]
+    if method != "bm25":
+        steps.insert(0, ("make up", "start Qdrant"))
+    body = f"No [bold]{method}[/] index found. Run first:\n\n" + "\n".join(
+        f"  {i}. {cmd:<26} [dim]{desc}[/]"
+        for i, (cmd, desc) in enumerate(steps, 1)
+    )
+    console.print(Panel(body, title="Not ready", title_align="left",
+                        border_style="yellow"))
 
 
 def sources_line(sources: List[MinimalSource]) -> Text:
