@@ -2,7 +2,7 @@
 
 # RAG — Ask Questions about Your Docs
 
-<video src="https://github.com/user-attachments/assets/5f4591c2-f135-4f5f-b3a8-e57a486ecc4a" controls muted width="800"></video>
+<img src="assets/demo_motion.gif" alt="RAG motion design" width="800">
 
 **BM25, vector or hybrid search over your files, with optional query rewrite and reranking,
 served by vLLM or a local Ollama.**
