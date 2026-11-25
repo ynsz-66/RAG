@@ -69,7 +69,7 @@ These models are only defaults: serve any model vLLM supports, then set the same
 
 | Variable            | Default                    | Used for                    |
 |---------------------|----------------------------|-----------------------------|
-| `VLLM_API_KEY`      | `EMPTY`                    | same value as `--api-key`   |
+| `VLLM_API_KEY`      | `EMPTY`                    | same value as `--api-key`; if you have none, generate it with `openssl rand -hex 32` |
 | `VLLM_LLM_URL`      | `http://localhost:8000/v1` | chat, **with** `/v1`        |
 | `VLLM_LLM_MODEL`    | `Qwen/Qwen3-8B-AWQ`        | chat model                  |
 | `VLLM_EMBED_URL`    | `http://localhost:8001/v1` | embeddings, **with** `/v1`  |
@@ -80,6 +80,12 @@ These models are only defaults: serve any model vLLM supports, then set the same
 Use the machine's address instead of `localhost` if the servers run elsewhere, and always set `--api-key` if they are reachable from the internet.
 
 Changing the embedding model changes the vectors: re-run `make index` for `embedding` / `hybrid`.
+
+If the embedding model expects an instruction on queries (e.g. `Qwen/Qwen3-Embedding-0.6B`), set `EMBED_QUERY_INSTRUCT` in `.env` (the variable is already in `.env.example`); leave it empty otherwise. Example:
+
+```
+EMBED_QUERY_INSTRUCT="Given a question about the vLLM codebase or docs, retrieve the code or documentation passages that answer it"
+```
 
 ### Other settings
 
