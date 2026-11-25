@@ -5,8 +5,8 @@ from typing import List
 from src.ollama_llm import OllamaLLM
 from src.openai_llm import OpenLLM, get_llm
 from src.var import (
+    OLLAMA_REWRITE_MODEL,
     REWRITE_KEYWORDS_SYSTEM,
-    REWRITE_MODEL,
     REWRITE_QUERY_SYSTEM,
 )
 
@@ -38,7 +38,7 @@ def clean_keywords(text: str) -> str:
 def rewrite_llm() -> OpenLLM | OllamaLLM:
     # repeat_penalty: small models loop at temperature 0
     llm = get_llm(
-        REWRITE_MODEL, think=False, temperature=0, repeat_penalty=1.3
+        OLLAMA_REWRITE_MODEL, think=False, temperature=0, repeat_penalty=1.3
     )
     log.debug(f"rewrite: calling {llm.model} on {llm.host}")
     return llm

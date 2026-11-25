@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔎 RAG — Ask Questions about Your Docs
+# RAG — Ask Questions about Your Docs
 
 **BM25, vector or hybrid search over your files, with optional query rewrite and reranking,
 served by vLLM or a local Ollama.**
@@ -11,11 +11,13 @@ served by vLLM or a local Ollama.**
 ![Qdrant](https://img.shields.io/badge/vector%20DB-Qdrant-DC244C)
 ![License](https://img.shields.io/github/license/ynsz-66/RAG)
 
+<video src="assets/demo_motion.mp4" controls muted width="800"></video>
+
 </div>
 
 ---
 
-## ⚙️ Setup
+## Setup
 
 ### Install
 
@@ -40,16 +42,16 @@ ollama pull bge-m3           # embedding model
 The reranker runs locally with [fastembed](https://github.com/qdrant/fastembed) and downloads its model on first use.
 
 The models above are only defaults: set any model you have pulled in the variables below
-(any [fastembed](https://qdrant.github.io/fastembed/examples/Supported_Models/) cross-encoder for `RERANKER_MODEL`).
+(any [fastembed](https://qdrant.github.io/fastembed/examples/Supported_Models/) cross-encoder for `FASTEMBED_RERANK_MODEL`).
 
-| Variable         | Default                   | Used for                        |
-|------------------|---------------------------|---------------------------------|
-| `OLLAMA_HOST`    | `http://localhost:11434`  | chat (answer, rewrite)          |
-| `OLLAMA_MODEL`   | `qwen3:8b`                | chat model                      |
-| `REWRITE_MODEL`  | `OLLAMA_MODEL`            | chat model for the rewrite only |
-| `EMBED_HOST`     | `http://localhost:11434`  | embeddings                      |
-| `EMBED_MODEL`    | `BGE-M3`                  | embedding model                 |
-| `RERANKER_MODEL` | `BAAI/bge-reranker-v2-m3` | fastembed cross-encoder         |
+| Variable                 | Default                   | Used for                        |
+|--------------------------|---------------------------|---------------------------------|
+| `OLLAMA_LLM_URL`         | `http://localhost:11434`  | chat (answer, rewrite)          |
+| `OLLAMA_LLM_MODEL`       | `qwen3:0.6b`              | chat model                      |
+| `OLLAMA_REWRITE_MODEL`   | `OLLAMA_LLM_MODEL`        | chat model for the rewrite only |
+| `OLLAMA_EMBED_URL`       | `http://localhost:11434`  | embeddings                      |
+| `OLLAMA_EMBED_MODEL`     | `BGE-M3`                  | embedding model                 |
+| `FASTEMBED_RERANK_MODEL` | `BAAI/bge-reranker-v2-m3` | fastembed cross-encoder         |
 
 ### `LLM=vllm` *(default)*
 
@@ -72,7 +74,7 @@ These models are only defaults: serve any model vLLM supports, then set the same
 | `VLLM_LLM_MODEL`    | `Qwen/Qwen3-8B-AWQ`        | chat model                  |
 | `VLLM_EMBED_URL`    | `http://localhost:8001/v1` | embeddings, **with** `/v1`  |
 | `VLLM_EMBED_MODEL`  | `BAAI/bge-m3`              | embedding model             |
-| `VLLM_RERANK_URL`   | `http://localhost:8002`    | reranker, **without** `/v1` |
+| `VLLM_RERANK_URL`   | `http://localhost:8002/v1` | reranker, **with** `/v1`    |
 | `VLLM_RERANK_MODEL` | `BAAI/bge-reranker-v2-m3`  | reranker model              |
 
 Use the machine's address instead of `localhost` if the servers run elsewhere, and always set `--api-key` if they are reachable from the internet.
@@ -96,7 +98,7 @@ The Qdrant dashboard is at <http://localhost:6333/dashboard> (data in `qdrant_st
   <img src="assets/qdrant-dashboard.png" alt="Qdrant dashboard: graph of the chunks collection" width="800">
 </div>
 
-## 🚀 Usage
+## Usage
 
 ```bash
 make index    [RAW=path/] [METHOD=bm25|embedding|hybrid] [LLM=vllm|ollama]                      # chunk + index a folder
@@ -124,6 +126,7 @@ make answer   Q="How do I load a LoRA adapter?" METHOD=hybrid RERANKER=True
 | `make index`       | Index `RAW` with `METHOD`                                |
 | `make retrieve`    | Top-`K` chunks for `Q`                                   |
 | `make answer`      | LLM answer for `Q`                                       |
+| `make demo`        | Interactive question → answer loop (see [Demo](#demo))  |
 | `make lint`        | flake8 + mypy                                            |
 | `make clean`       | Stop Qdrant, remove venv and caches                      |
 | `make fclean`      | `clean` + delete the Qdrant storage, BM25 index, chunks  |
@@ -149,16 +152,48 @@ make answer   Q="How do I load a LoRA adapter?" METHOD=hybrid RERANKER=True
 Files: `.md` (by headings), `.py` (by AST), `.pdf` (by page), `.txt` (by lines).
 The answer is written in the question's language, **only** from the sources.
 
-## Stack
+## Demo
 
-[`bm25s`](https://github.com/xhluca/bm25s) · [Qdrant](https://qdrant.tech) · [vLLM](https://docs.vllm.ai) (`openai` client) ·
-Ollama (`httpx`) · [`fastembed`](https://github.com/qdrant/fastembed) · `pydantic` · `pypdf` · `fire` · `python-dotenv`
+`make demo` is an interactive question → answer loop for live presentations: ASCII banner,
+a spinner while searching, the answer streamed as Markdown, then the source files used.
+Each question is **independent**: no history is ever sent to the model, it is not a chatbot.
+### Before the first demo
 
-## License
+Run these once, in order. Without an index, the demo stops and prints the missing steps.
 
-See [LICENSE](LICENSE).
+```bash
+make install                      # dependencies
+ollama serve                      # in another terminal
+ollama pull qwen3:0.6b            # chat model
+ollama pull bge-m3                # embeddings (embedding / hybrid only)
+make up                           # Qdrant (embedding / hybrid only)
+make fetch-vllm                   # the vLLM v0.10.1 docs = the corpus the demo answers from
+make index METHOD=hybrid LLM=ollama
+```
 
-## 📊 Evaluation
+### Run it
+
+```bash
+make demo METHOD=hybrid LLM=ollama [RERANKER=True] [REWRITE=True] [K=10] [KEEP=3] [VERBOSE=True]
+```
+
+- Type a question and press Enter. `↑` / `↓` recall previous questions, `←` / `→` edit the line.
+- `Ctrl+C` stops the current answer; `/quit`, `exit` or `Ctrl+D` leaves.
+- `VERBOSE=True` shows the debug logs (rewrite, retrieval timings); keep it off in front of an audience.
+
+### Avoiding errors
+
+| Symptom | Fix |
+|---------|-----|
+| `Not ready` panel at startup | No index for this `METHOD` (or Qdrant down): run the steps above |
+| Red `✗ ConnectError` after a question | Ollama isn't running: `ollama serve` |
+| Red error naming a model | Model not pulled: `ollama pull <model>` |
+| `No sources found` | Nothing matched: rephrase, or try `METHOD=hybrid` / `REWRITE=True` |
+
+Use the **same `METHOD` and `LLM`** for `make index` and `make demo`, and re-run `make index` after
+switching backend: vectors from Ollama and vLLM aren't interchangeable.
+
+## Evaluation
 
 `evaluate` only measures **retrieval quality** (Recall@k of `retrieve`), not the answers.
 The datasets in `datasets_public/` are used **only** for it: questions about
@@ -179,3 +214,12 @@ per configuration (outputs keep the input's file name). Only `AnsweredQuestions[
 A ground-truth source is **found** when a retrieved chunk of the same file overlaps at least 5 % of it;
 Recall@k is the share found in the top-k, averaged over the questions.
 `make answer-dataset STUDENT_SEARCH_RESULTS_PATH=... SAVE_DIRECTORY=...` can also add an LLM answer per question (not scored).
+
+## Stack
+
+[`bm25s`](https://github.com/xhluca/bm25s) · [Qdrant](https://qdrant.tech) · [vLLM](https://docs.vllm.ai) (`openai` client) ·
+Ollama (`httpx`) · [`fastembed`](https://github.com/qdrant/fastembed) · `pydantic` · `pypdf` · `fire` · `python-dotenv`
+
+## License
+
+See [LICENSE](LICENSE).

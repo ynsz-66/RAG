@@ -12,8 +12,9 @@ from tqdm import tqdm  # type: ignore
 from src.chunking import create_chunk
 from src.validators import Chunk
 from src.var import (
-    EMBED_HOST, EMBED_MODEL, EMBED_QUERY_INSTRUCT, QDRANT_COLLECTION,
-    QDRANT_URL, VLLM_API_KEY, VLLM_EMBED_MODEL, VLLM_EMBED_URL, llm_backend,
+    EMBED_QUERY_INSTRUCT, OLLAMA_EMBED_MODEL, OLLAMA_EMBED_URL,
+    QDRANT_COLLECTION, QDRANT_URL, VLLM_API_KEY, VLLM_EMBED_MODEL,
+    VLLM_EMBED_URL, llm_backend,
 )
 
 BATCH_SIZE = 32
@@ -30,7 +31,7 @@ def embed_target() -> str:
     """'<model> on <host>' for the current backend (logs)."""
     if llm_backend() == "vllm":
         return f"{VLLM_EMBED_MODEL} on {VLLM_EMBED_URL}"
-    return f"{EMBED_MODEL} on {EMBED_HOST}"
+    return f"{OLLAMA_EMBED_MODEL} on {OLLAMA_EMBED_URL}"
 
 
 def embed(texts: List[str]) -> List[List[float]]:
@@ -41,8 +42,8 @@ def embed(texts: List[str]) -> List[List[float]]:
         )
         return [item.embedding for item in result.data]
     response = httpx.post(
-        f"{EMBED_HOST}/api/embed",
-        json={"model": EMBED_MODEL, "input": texts},
+        f"{OLLAMA_EMBED_URL}/api/embed",
+        json={"model": OLLAMA_EMBED_MODEL, "input": texts},
         timeout=300,
     )
     response.raise_for_status()

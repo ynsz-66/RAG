@@ -33,15 +33,22 @@ STEMMER = Stemmer.Stemmer(STEMMER_LANG)
 INDEX_DIR = os.environ.get("BM25_INDEX_DIR", "data/processed/bm25_index/")
 CHUNKS_DIR = os.environ.get("CHUNKS_DIR", "data/processed/chunks/")
 CHUNKS_PATH = os.path.join(CHUNKS_DIR, "chunks.json")
-EMBED_HOST = os.environ.get("EMBED_HOST", "http://localhost:11434")
-EMBED_MODEL = os.environ.get("EMBED_MODEL", "BGE-M3")
+# --llm ollama: Ollama (chat, embeddings) + fastembed (reranker, local)
+OLLAMA_LLM_URL = os.environ.get("OLLAMA_LLM_URL", "http://localhost:11434")
+OLLAMA_LLM_MODEL = os.environ.get("OLLAMA_LLM_MODEL", "qwen3:0.6b")
+OLLAMA_EMBED_URL = os.environ.get(
+    "OLLAMA_EMBED_URL", "http://localhost:11434"
+)
+OLLAMA_EMBED_MODEL = os.environ.get("OLLAMA_EMBED_MODEL", "BGE-M3")
 QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
 QDRANT_COLLECTION = os.environ.get("QDRANT_COLLECTION", "chunks")
 QDRANT_HYBRID_COLLECTION = os.environ.get(
     "QDRANT_HYBRID_COLLECTION", "chunks_hybrid"
 )
 RERANK_CANDIDATES = int(os.environ.get("RERANK_CANDIDATES", 50))
-RERANKER_MODEL = os.environ.get("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
+FASTEMBED_RERANK_MODEL = os.environ.get(
+    "FASTEMBED_RERANK_MODEL", "BAAI/bge-reranker-v2-m3"
+)
 # --llm vllm (default): OpenAI-compatible vLLM; ollama: Ollama + fastembed
 LLM_BACKENDS = ("vllm", "ollama")
 VLLM_API_KEY = os.environ.get("VLLM_API_KEY", "EMPTY")
@@ -51,7 +58,7 @@ VLLM_EMBED_URL = os.environ.get("VLLM_EMBED_URL", "http://localhost:8001/v1")
 VLLM_EMBED_MODEL = os.environ.get("VLLM_EMBED_MODEL", "BAAI/bge-m3")
 # query-side instruction (e.g. Qwen3-Embedding); empty = raw query
 EMBED_QUERY_INSTRUCT = os.environ.get("EMBED_QUERY_INSTRUCT", "")
-VLLM_RERANK_URL = os.environ.get("VLLM_RERANK_URL", "http://localhost:8002")
+VLLM_RERANK_URL = os.environ.get("VLLM_RERANK_URL", "http://localhost:8002/v1")
 VLLM_RERANK_MODEL = os.environ.get(
     "VLLM_RERANK_MODEL", "BAAI/bge-reranker-v2-m3"
 )
@@ -67,8 +74,8 @@ def llm_backend() -> str:
     return backend
 
 
-# None -> OllamaLLM falls back to OLLAMA_MODEL
-REWRITE_MODEL = os.environ.get("REWRITE_MODEL")
+# None -> OllamaLLM falls back to OLLAMA_LLM_MODEL
+OLLAMA_REWRITE_MODEL = os.environ.get("OLLAMA_REWRITE_MODEL")
 REWRITE_KEYWORDS_SYSTEM = (
     "You turn a user question about vLLM (an LLM inference engine) into "
     "search keywords for its documentation and source code.\n"

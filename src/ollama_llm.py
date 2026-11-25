@@ -1,8 +1,9 @@
-import os
 from typing import Any, Iterator
 
 import httpx
 import ollama
+
+from src.var import OLLAMA_LLM_MODEL, OLLAMA_LLM_URL
 
 UNREACHABLE = (ConnectionError, httpx.ConnectError)
 
@@ -13,7 +14,6 @@ class OllamaLLM:
     The native endpoint is used because only it honors ``think``.
     """
 
-    DEFAULT_HOST = "http://localhost:11434"
     TIMEOUT = 300.0
 
     def __init__(
@@ -24,9 +24,8 @@ class OllamaLLM:
         temperature: float | None = None,
         repeat_penalty: float | None = None,
     ) -> None:
-        host = host or os.environ.get("OLLAMA_HOST", self.DEFAULT_HOST)
-        self.host = host.rstrip("/")
-        self.model = model or os.environ.get("OLLAMA_MODEL", "qwen3:8b")
+        self.host = (host or OLLAMA_LLM_URL).rstrip("/")
+        self.model = model or OLLAMA_LLM_MODEL
         self.think = think
         self.options: dict[str, Any] = {
             key: value
