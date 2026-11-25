@@ -2,6 +2,8 @@
 
 # RAG — Ask Questions about Your Docs
 
+<video src="https://github.com/user-attachments/assets/5f4591c2-f135-4f5f-b3a8-e57a486ecc4a" controls muted width="800"></video>
+
 **BM25, vector or hybrid search over your files, with optional query rewrite and reranking,
 served by vLLM or a local Ollama.**
 
@@ -10,8 +12,6 @@ served by vLLM or a local Ollama.**
 ![Retrieval](https://img.shields.io/badge/retrieval-BM25%20%7C%20embeddings%20%7C%20hybrid-orange)
 ![Qdrant](https://img.shields.io/badge/vector%20DB-Qdrant-DC244C)
 ![License](https://img.shields.io/github/license/ynsz-66/RAG)
-
-<video src="assets/demo_motion.mp4" controls muted width="800"></video>
 
 </div>
 
